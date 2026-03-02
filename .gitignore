@@ -3,5 +3,5 @@
 ################################################################################
 
 /.vs/Chara2img
-chara2img/bin/*
-chara2img/obj/*
+chara2img/bin/
+chara2img/obj/
