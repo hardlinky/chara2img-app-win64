@@ -1,18 +1,79 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
 using System.Text.Json.Serialization;
 
 namespace chara2img.Models
 {
-    public class RunpodJob
+    public class RunpodJob : INotifyPropertyChanged
     {
+        private string _status = "pending";
+        private DateTime? _completedAt;
+
+        public event PropertyChangedEventHandler? PropertyChanged;
+
         public string? Id { get; set; }
-        public string Status { get; set; } = "pending";
+        
+        public string Status
+        {
+            get => _status;
+            set
+            {
+                if (_status != value)
+                {
+                    _status = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
         public string? ImageBase64 { get; set; }
+        public List<string>? AllImagesBase64 { get; set; }
+        public string? ImageFilePath { get; set; }
+        public List<string>? ImageFilePaths { get; set; }
         public DateTime CreatedAt { get; set; }
-        public DateTime? CompletedAt { get; set; }
+        
+        public DateTime? CompletedAt
+        {
+            get => _completedAt;
+            set
+            {
+                if (_completedAt != value)
+                {
+                    _completedAt = value;
+                    OnPropertyChanged();
+                    OnPropertyChanged(nameof(Duration));
+                }
+            }
+        }
+
         public string? ErrorMessage { get; set; }
         public string? RawStatusResponse { get; set; }
+
+        [JsonIgnore]
+        public string Duration
+        {
+            get
+            {
+                if (CompletedAt.HasValue)
+                {
+                    var duration = CompletedAt.Value - CreatedAt;
+                    if (duration.TotalHours >= 1)
+                        return $"{(int)duration.TotalHours}h {duration.Minutes}m {duration.Seconds}s";
+                    else if (duration.TotalMinutes >= 1)
+                        return $"{duration.Minutes}m {duration.Seconds}s";
+                    else
+                        return $"{duration.Seconds}s";
+                }
+                return "-";
+            }
+        }
+
+        protected void OnPropertyChanged([CallerMemberName] string? propertyName = null)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
     }
 
     public class RunpodRequest

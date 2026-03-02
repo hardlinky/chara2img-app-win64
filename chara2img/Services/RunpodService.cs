@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -48,7 +49,8 @@ namespace chara2img.Services
             return (parsedResponse, rawJson);
         }
 
-        public async Task<RunpodJob?> PollJobUntilCompleteAsync(string jobId, 
+        public async Task<RunpodJob?> PollJobUntilCompleteAsync(
+            RunpodJob job,
             int pollingIntervalMs = 2000, 
             int maxAttempts = 150,
             IProgress<string>? progress = null,
@@ -58,7 +60,7 @@ namespace chara2img.Services
 
             for (int i = 0; i < maxAttempts; i++)
             {
-                var (response, rawJson) = await GetJobStatusAsync(jobId);
+                var (response, rawJson) = await GetJobStatusAsync(job.Id!);
                 latestRawResponse = rawJson;
                 onStatusUpdate?.Invoke(rawJson);
                 
@@ -66,48 +68,47 @@ namespace chara2img.Services
 
                 if (response?.Status == "COMPLETED")
                 {
-                    return new RunpodJob
-                    {
-                        Id = jobId,
-                        Status = "completed",
-                        ImageBase64 = ExtractImageFromResponse(response),
-                        CompletedAt = DateTime.Now,
-                        RawStatusResponse = TruncateBase64InJson(rawJson)
-                    };
+                    job.Status = "completed";
+                    job.AllImagesBase64 = ExtractAllImagesFromResponse(response);
+                    job.ImageBase64 = job.AllImagesBase64?.FirstOrDefault();
+                    job.CompletedAt = DateTime.Now;
+                    job.RawStatusResponse = TruncateBase64InJson(rawJson);
+                    return job;
                 }
                 else if (response?.Status == "FAILED")
                 {
-                    return new RunpodJob
-                    {
-                        Id = jobId,
-                        Status = "failed",
-                        ErrorMessage = response.Error,
-                        CompletedAt = DateTime.Now,
-                        RawStatusResponse = rawJson
-                    };
+                    job.Status = "failed";
+                    job.ErrorMessage = response.Error;
+                    job.CompletedAt = DateTime.Now;
+                    job.RawStatusResponse = rawJson;
+                    return job;
                 }
 
                 await Task.Delay(pollingIntervalMs);
             }
 
-            return new RunpodJob
-            {
-                Id = jobId,
-                Status = "timeout",
-                ErrorMessage = "Job polling timeout exceeded",
-                RawStatusResponse = latestRawResponse
-            };
+            job.Status = "timeout";
+            job.ErrorMessage = "Job polling timeout exceeded";
+            job.RawStatusResponse = latestRawResponse;
+            return job;
         }
 
-        private static string? ExtractImageFromResponse(RunpodResponse response)
+        private static List<string> ExtractAllImagesFromResponse(RunpodResponse response)
         {
-            // Try to get image from the Images array
-            if (response.Output?.Images != null && response.Output.Images.Count > 0)
+            var images = new List<string>();
+
+            if (response.Output?.Images != null)
             {
-                return response.Output.Images[0]?.Data;
+                foreach (var imageOutput in response.Output.Images)
+                {
+                    if (!string.IsNullOrEmpty(imageOutput?.Data))
+                    {
+                        images.Add(imageOutput.Data);
+                    }
+                }
             }
 
-            return null;
+            return images;
         }
 
         private static string TruncateBase64InJson(string json)

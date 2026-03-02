@@ -9,6 +9,8 @@
             <local:InverseBoolToVisibilityConverter x:Key="InverseBoolToVisibilityConverter"/>
             <local:NullToVisibilityConverter x:Key="NullToVisibilityConverter"/>
             <local:ExpandCollapseTextConverter x:Key="ExpandCollapseTextConverter"/>
+            <local:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
+            <local:ZeroToVisibilityConverter x:Key="ZeroToVisibilityConverter"/>
             
             <ResourceDictionary.MergedDictionaries>
                 <!-- Use system theme colors -->
