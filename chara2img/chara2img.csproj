@@ -6,6 +6,15 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
+    <AssemblyName>Chara2IMG</AssemblyName>
+    <Product>Chara2IMG - ComfyUI Runner</Product>
+    <Version>1.0.0</Version>
+    <Company>Your Name</Company>
+    <Copyright>Copyright © 2024</Copyright>
+    <PublishSingleFile>true</PublishSingleFile>
+    <SelfContained>false</SelfContained>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <PublishReadyToRun>true</PublishReadyToRun>
   </PropertyGroup>
 
   <ItemGroup>
