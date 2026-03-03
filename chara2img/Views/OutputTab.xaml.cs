@@ -4,6 +4,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media.Imaging;
+using System.ComponentModel;
 
 namespace chara2img.Views
 {
@@ -21,6 +22,7 @@ namespace chara2img.Views
         {
             InitializeComponent();
             this.Loaded += OutputTab_Loaded;
+            this.DataContextChanged += OutputTab_DataContextChanged;
         }
 
         private void OutputTab_Loaded(object sender, RoutedEventArgs e)
@@ -28,6 +30,44 @@ namespace chara2img.Views
             // Set focus to enable keyboard input
             this.Focusable = true;
             this.Focus();
+            
+            SubscribeToViewModelEvents();
+        }
+
+        private void OutputTab_DataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
+        {
+            // Unsubscribe from old view model
+            if (e.OldValue is INotifyPropertyChanged oldViewModel)
+            {
+                oldViewModel.PropertyChanged -= ViewModel_PropertyChanged;
+            }
+            
+            // Subscribe to new view model
+            SubscribeToViewModelEvents();
+        }
+
+        private void SubscribeToViewModelEvents()
+        {
+            if (DataContext is INotifyPropertyChanged viewModel)
+            {
+                viewModel.PropertyChanged -= ViewModel_PropertyChanged; // Prevent double subscription
+                viewModel.PropertyChanged += ViewModel_PropertyChanged;
+            }
+        }
+
+        private void ViewModel_PropertyChanged(object? sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(ViewModels.MainViewModel.ImageZoom))
+            {
+                if (DataContext is ViewModels.MainViewModel viewModel && viewModel.ImageZoom == -1)
+                {
+                    // ImageZoom was set to -1, which means we should fit to screen
+                    Dispatcher.BeginInvoke(new Action(() =>
+                    {
+                        FitImageToScreen();
+                    }), System.Windows.Threading.DispatcherPriority.Loaded);
+                }
+            }
         }
 
         private void OutputTab_PreviewKeyDown(object sender, KeyEventArgs e)
@@ -54,6 +94,18 @@ namespace chara2img.Views
                     // Go to next image (loop to first if at last)
                     var nextIndex = currentIndex == currentImages.Count - 1 ? 0 : currentIndex + 1;
                     viewModel.ShowImageCommand.Execute(currentImages[nextIndex]);
+                    e.Handled = true;
+                    break;
+
+                case Key.Up:
+                    // Go to next job
+                    viewModel.NavigateToNextJobCommand.Execute(null);
+                    e.Handled = true;
+                    break;
+
+                case Key.Down:
+                    // Go to previous job
+                    viewModel.NavigateToPreviousJobCommand.Execute(null);
                     e.Handled = true;
                     break;
 

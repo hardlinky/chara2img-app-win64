@@ -193,6 +193,10 @@ namespace chara2img.ViewModels
         public ICommand RerunJobCommand { get; }
         public ICommand LoadJobInputsCommand { get; }
 
+        // Add new command for navigating jobs
+        public ICommand NavigateToPreviousJobCommand { get; }
+        public ICommand NavigateToNextJobCommand { get; }
+
         public double ImageZoom
         {
             get => _imageZoom;
@@ -214,6 +218,8 @@ namespace chara2img.ViewModels
             RemoveJobCommand = new RelayCommand<RunpodJob>(RemoveJob, job => job != null);
             RerunJobCommand = new RelayCommand<RunpodJob>(async job => await RerunJobAsync(job), job => job != null && !string.IsNullOrEmpty(job?.WorkflowInputsJson) && !IsRunning);
             LoadJobInputsCommand = new RelayCommand<RunpodJob>(LoadJobInputs, job => job != null && !string.IsNullOrEmpty(job?.WorkflowInputsJson));
+            NavigateToPreviousJobCommand = new RelayCommand(NavigateToPreviousJob, CanNavigateToPreviousJob);
+            NavigateToNextJobCommand = new RelayCommand(NavigateToNextJob, CanNavigateToNextJob);
 
             // Load settings
             _settings = AppSettings.Load();
@@ -873,6 +879,61 @@ namespace chara2img.ViewModels
             }
 
             WorkflowInputs = WorkflowInputParser.ParseWorkflow(WorkflowJson);
+        }
+
+        // NEW: Navigation methods
+        private bool CanNavigateToPreviousJob()
+        {
+            // Can always navigate if there are jobs (will loop)
+            return Jobs.Count > 0 && SelectedJob != null;
+        }
+
+        private bool CanNavigateToNextJob()
+        {
+            // Can always navigate if there are jobs (will loop)
+            return Jobs.Count > 0 && SelectedJob != null;
+        }
+
+        private void NavigateToPreviousJob()
+        {
+            if (!CanNavigateToPreviousJob()) return;
+            
+            var currentIndex = Jobs.IndexOf(SelectedJob!);
+            // Loop to last job if at first (top of list)
+            var previousIndex = currentIndex == 0 ? Jobs.Count - 1 : currentIndex - 1;
+            var previousJob = Jobs[previousIndex];
+            var wasInPreviewMode = !IsGalleryView;
+            
+            SelectedJob = previousJob;
+            
+            // If we were in preview mode, open the first image of the new job
+            if (wasInPreviewMode && CurrentImages.Count > 0)
+            {
+                ShowImage(CurrentImages[0]);
+                // Notify to trigger re-evaluation
+                OnPropertyChanged(nameof(ImageZoom));
+            }
+        }
+
+        private void NavigateToNextJob()
+        {
+            if (!CanNavigateToNextJob()) return;
+            
+            var currentIndex = Jobs.IndexOf(SelectedJob!);
+            // Loop to first job if at last (bottom of list)
+            var nextIndex = currentIndex == Jobs.Count - 1 ? 0 : currentIndex + 1;
+            var nextJob = Jobs[nextIndex];
+            var wasInPreviewMode = !IsGalleryView;
+            
+            SelectedJob = nextJob;
+            
+            // If we were in preview mode, open the first image of the new job
+            if (wasInPreviewMode && CurrentImages.Count > 0)
+            {
+                ShowImage(CurrentImages[0]);
+                // Notify to trigger re-evaluation
+                OnPropertyChanged(nameof(ImageZoom));
+            }
         }
 
         protected void OnPropertyChanged([CallerMemberName] string? propertyName = null)
