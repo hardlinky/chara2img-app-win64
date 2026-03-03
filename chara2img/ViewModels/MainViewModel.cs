@@ -18,7 +18,7 @@ namespace chara2img.ViewModels
 {
     public class MainViewModel : INotifyPropertyChanged
     {
-        private RunpodService? _runPodService;
+        private RunpodService? _runpodService;
         private string _apiKey = "";
         private string _endpointId = "";
         private string _statusMessage = "Ready";
@@ -99,7 +99,13 @@ namespace chara2img.ViewModels
         public string WorkflowJson
         {
             get => _workflowJson;
-            set { _workflowJson = value; OnPropertyChanged(); OnPropertyChanged(nameof(HasWorkflow)); }
+            set
+            {
+                _workflowJson = value;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(HasWorkflow));
+                ParseWorkflowInputs(); // Add this line
+            }
         }
 
         public string WorkflowFilePath
@@ -152,6 +158,18 @@ namespace chara2img.ViewModels
         }
 
         public bool HasWorkflow => !string.IsNullOrWhiteSpace(_workflowJson);
+
+        private Dictionary<string, ObservableCollection<WorkflowInput>> _workflowInputs = new();
+
+        public Dictionary<string, ObservableCollection<WorkflowInput>> WorkflowInputs
+        {
+            get => _workflowInputs;
+            set
+            {
+                _workflowInputs = value;
+                OnPropertyChanged();
+            }
+        }
 
         public ICommand RunJobCommand { get; }
         public ICommand BrowseFolderCommand { get; }
@@ -289,8 +307,8 @@ namespace chara2img.ViewModels
 
             try
             {
-                _runPodService = new RunpodService(_apiKey, _endpointId);
-                var (response, rawJson) = await _runPodService.GetJobStatusAsync(_selectedJob.Id);
+                _runpodService = new RunpodService(_apiKey, _endpointId);
+                var (response, rawJson) = await _runpodService.GetJobStatusAsync(_selectedJob.Id);
 
                 if (response != null)
                 {
@@ -408,38 +426,28 @@ namespace chara2img.ViewModels
 
         private async Task RunJobAsync()
         {
+            if (string.IsNullOrWhiteSpace(WorkflowJson))
+            {
+                StatusMessage = "No workflow loaded!";
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(ApiKey) || string.IsNullOrWhiteSpace(EndpointId))
+            {
+                StatusMessage = "Please configure API key and Endpoint ID in Settings";
+                return;
+            }
+
             try
             {
-                IsRunning = true;
-                StatusMessage = "Initializing...";
-
-                _runPodService = new RunpodService(_apiKey, _endpointId);
-
-                // Parse the workflow JSON
-                object? workflowInput;
-                try
-                {
-                    workflowInput = JsonSerializer.Deserialize<object>(WorkflowJson);
-                }
-                catch (JsonException ex)
-                {
-                    StatusMessage = "Invalid workflow JSON";
-                    MessageBox.Show($"Invalid workflow JSON:\n{ex.Message}", 
-                        "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                    return;
-                }
-
-                if (workflowInput == null)
-                {
-                    StatusMessage = "Workflow JSON is empty or invalid";
-                    MessageBox.Show("Workflow JSON is empty or invalid.", 
-                        "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                    return;
-                }
-
                 StatusMessage = "Submitting job...";
-                var jobId = await _runPodService.SubmitJobAsync(workflowInput);
 
+                // Apply inputs to workflow
+                var modifiedWorkflow = WorkflowInputApplier.ApplyInputs(WorkflowJson, WorkflowInputs);
+                var workflow = JsonSerializer.Deserialize<object>(modifiedWorkflow);
+
+                var jobId = await _runpodService!.SubmitJobAsync(workflow!);
+                
                 if (string.IsNullOrEmpty(jobId))
                 {
                     StatusMessage = "Failed to submit job";
@@ -457,7 +465,7 @@ namespace chara2img.ViewModels
                 StatusMessage = $"Job {jobId} submitted. Polling...";
 
                 var progress = new Progress<string>(msg => StatusMessage = msg);
-                var completedJob = await _runPodService.PollJobUntilCompleteAsync(
+                var completedJob = await _runpodService.PollJobUntilCompleteAsync(
                     job, 
                     progress: progress,
                     onStatusUpdate: rawJson => 
@@ -654,6 +662,17 @@ namespace chara2img.ViewModels
                     MessageBox.Show($"Failed to save image:\n{ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 }
             }
+        }
+
+        private void ParseWorkflowInputs()
+        {
+            if (string.IsNullOrWhiteSpace(WorkflowJson))
+            {
+                WorkflowInputs = new();
+                return;
+            }
+
+            WorkflowInputs = WorkflowInputParser.ParseWorkflow(WorkflowJson);
         }
 
         protected void OnPropertyChanged([CallerMemberName] string? propertyName = null)

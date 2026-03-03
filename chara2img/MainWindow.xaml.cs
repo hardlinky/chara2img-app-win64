@@ -206,6 +206,12 @@ namespace chara2img
                 Dispatcher.BeginInvoke(new Action(() => FitImageToScreen()), System.Windows.Threading.DispatcherPriority.ApplicationIdle);
             }
         }
+
+        // Add number validation handler
+        private void NumberValidationTextBox(object sender, TextCompositionEventArgs e)
+        {
+            e.Handled = !int.TryParse(e.Text, out _);
+        }
     }
 
     public class InverseBoolConverter : IValueConverter
@@ -278,6 +284,23 @@ namespace chara2img
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
             return value is int count && count == 0 ? Visibility.Visible : Visibility.Collapsed;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+    public class InputTypeToVisibilityConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            if (value is string inputType && parameter is string expectedType)
+            {
+                return inputType == expectedType ? Visibility.Visible : Visibility.Collapsed;
+            }
+            return Visibility.Collapsed;
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
