@@ -16,7 +16,6 @@ namespace chara2img.Views
         private double _hOffset;
         private double _vOffset;
         private bool _isDragging;
-        private BitmapImage? _lastImageSource;
 
         public OutputTab()
         {

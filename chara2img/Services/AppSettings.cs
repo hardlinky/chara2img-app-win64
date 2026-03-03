@@ -1,5 +1,6 @@
 using System.IO;
 using System.Text.Json;
+using chara2img.Models;
 
 namespace chara2img.Services
 {
@@ -9,6 +10,7 @@ namespace chara2img.Services
         public string EndpointId { get; set; } = "";
         public string OutputFolder { get; set; } = "";
         public string LastWorkflowPath { get; set; } = "";
+        public List<RunpodJob>? RecentJobs { get; set; }
 
         private static readonly string SettingsFilePath = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),

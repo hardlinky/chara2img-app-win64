@@ -50,6 +50,9 @@ namespace chara2img.Models
 
         public string? ErrorMessage { get; set; }
         public string? RawStatusResponse { get; set; }
+        
+        // Store the workflow inputs used for this job to enable rerun
+        public string? WorkflowInputsJson { get; set; }
 
         [JsonIgnore]
         public string Duration

@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.IO;
@@ -33,6 +32,7 @@ namespace chara2img.ViewModels
         private bool _isStatusResponseExpanded = false;
         private bool _isGalleryView = true;
         private double _imageZoom = 1.0;
+        private const int MaxRecentJobs = 50; // Keep last 50 jobs
 
         public event PropertyChangedEventHandler? PropertyChanged;
 
@@ -189,6 +189,9 @@ namespace chara2img.ViewModels
         public ICommand ShowImageCommand { get; }
         public ICommand CloseImageCommand { get; }
         public ICommand SaveImageAsCommand { get; }
+        public ICommand RemoveJobCommand { get; }
+        public ICommand RerunJobCommand { get; }
+        public ICommand LoadJobInputsCommand { get; }
 
         public double ImageZoom
         {
@@ -208,6 +211,9 @@ namespace chara2img.ViewModels
             ShowImageCommand = new RelayCommand<BitmapImage>(ShowImage);
             CloseImageCommand = new RelayCommand(() => { IsGalleryView = true; CurrentImage = null; });
             SaveImageAsCommand = new RelayCommand(SaveImageAs, () => CurrentImage != null && !IsGalleryView);
+            RemoveJobCommand = new RelayCommand<RunpodJob>(RemoveJob, job => job != null);
+            RerunJobCommand = new RelayCommand<RunpodJob>(async job => await RerunJobAsync(job), job => job != null && !string.IsNullOrEmpty(job?.WorkflowInputsJson) && !IsRunning);
+            LoadJobInputsCommand = new RelayCommand<RunpodJob>(LoadJobInputs, job => job != null && !string.IsNullOrEmpty(job?.WorkflowInputsJson));
 
             // Load settings
             _settings = AppSettings.Load();
@@ -231,6 +237,15 @@ namespace chara2img.ViewModels
                 catch
                 {
                     // Ignore if we can't load the last workflow
+                }
+            }
+
+            // Load recent jobs
+            if (_settings.RecentJobs != null && _settings.RecentJobs.Count > 0)
+            {
+                foreach (var job in _settings.RecentJobs)
+                {
+                    Jobs.Add(job);
                 }
             }
 
@@ -351,11 +366,162 @@ namespace chara2img.ViewModels
                     }
 
                     StatusMessage = $"Refreshed status for job {_selectedJob.Id}";
+                    SaveJobsToSettings();
                 }
             }
             catch (Exception ex)
             {
                 MessageBox.Show($"Failed to refresh job status:\n{ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void RemoveJob(RunpodJob? job)
+        {
+            if (job == null) return;
+
+            var result = MessageBox.Show(
+                $"Are you sure you want to remove job {job.Id}?\n\nThis will not delete the generated images from disk.",
+                "Confirm Removal",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Question);
+
+            if (result == MessageBoxResult.Yes)
+            {
+                if (SelectedJob == job)
+                {
+                    SelectedJob = null;
+                }
+                Jobs.Remove(job);
+                SaveJobsToSettings();
+                StatusMessage = $"Removed job {job.Id}";
+            }
+        }
+
+        private async Task RerunJobAsync(RunpodJob? job)
+        {
+            if (job == null || string.IsNullOrEmpty(job.WorkflowInputsJson))
+            {
+                MessageBox.Show("Cannot rerun this job: workflow inputs not available.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+
+            try
+            {
+                // Restore the workflow inputs from the job
+                LoadJobInputsInternal(job);
+
+                StatusMessage = $"Rerunning job with saved inputs...";
+                
+                // Run the job with the restored inputs
+                await RunJobAsync();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Failed to rerun job:\n{ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void LoadJobInputs(RunpodJob? job)
+        {
+            if (job == null || string.IsNullOrEmpty(job.WorkflowInputsJson))
+            {
+                MessageBox.Show("Cannot load inputs: workflow inputs not available for this job.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+
+            try
+            {
+                LoadJobInputsInternal(job);
+                StatusMessage = $"Loaded inputs from job {job.Id}";
+                
+                // Show a notification to the user
+                MessageBox.Show(
+                    $"Job inputs have been loaded into the Input tab.\n\nYou can now review and modify them before running a new job.",
+                    "Inputs Loaded",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Failed to load job inputs:\n{ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void LoadJobInputsInternal(RunpodJob job)
+        {
+            if (string.IsNullOrEmpty(job.WorkflowInputsJson))
+                return;
+
+            // Deserialize the saved workflow inputs
+            var savedInputs = JsonSerializer.Deserialize<Dictionary<string, ObservableCollection<WorkflowInput>>>(
+                job.WorkflowInputsJson,
+                new JsonSerializerOptions 
+                { 
+                    Converters = { new WorkflowInputConverter() }
+                });
+
+            if (savedInputs == null)
+                return;
+
+            // If we don't have current workflow inputs, just use the saved ones
+            if (WorkflowInputs.Count == 0)
+            {
+                WorkflowInputs = savedInputs;
+                OnPropertyChanged(nameof(WorkflowInputs));
+                return;
+            }
+
+            // Merge the saved values into the current workflow inputs
+            foreach (var category in savedInputs)
+            {
+                if (!WorkflowInputs.ContainsKey(category.Key))
+                    continue;
+
+                var currentInputs = WorkflowInputs[category.Key];
+                
+                foreach (var savedInput in category.Value)
+                {
+                    // Find matching input in current workflow
+                    var currentInput = currentInputs.FirstOrDefault(i => 
+                        i.NodeId == savedInput.NodeId && 
+                        i.DisplayName == savedInput.DisplayName);
+
+                    if (currentInput != null)
+                    {
+                        // Copy values based on type
+                        if (currentInput is TextInput currentText && savedInput is TextInput savedText)
+                        {
+                            currentText.Value = savedText.Value;
+                        }
+                        else if (currentInput is NumberInput currentNumber && savedInput is NumberInput savedNumber)
+                        {
+                            currentNumber.Value = savedNumber.Value;
+                        }
+                        else if (currentInput is NumberPairInput currentPair && savedInput is NumberPairInput savedPair)
+                        {
+                            currentPair.Value1 = savedPair.Value1;
+                            currentPair.Value2 = savedPair.Value2;
+                        }
+                    }
+                }
+            }
+
+            // Trigger UI update
+            OnPropertyChanged(nameof(WorkflowInputs));
+        }
+
+        private void SaveJobsToSettings()
+        {
+            try
+            {
+                // Keep only the most recent jobs
+                var recentJobs = Jobs.Take(MaxRecentJobs).ToList();
+                _settings.RecentJobs = recentJobs;
+                _settings.Save();
+            }
+            catch
+            {
+                // Silently fail if we can't save jobs
             }
         }
 
@@ -475,11 +641,21 @@ namespace chara2img.ViewModels
                     return;
                 }
 
+                // Serialize current workflow inputs to save with the job
+                var workflowInputsJson = JsonSerializer.Serialize(
+                    WorkflowInputs,
+                    new JsonSerializerOptions 
+                    { 
+                        WriteIndented = false,
+                        Converters = { new WorkflowInputConverter() }
+                    });
+
                 var job = new RunpodJob
                 {
                     Id = jobId,
                     Status = "pending",
-                    CreatedAt = DateTime.Now
+                    CreatedAt = DateTime.Now,
+                    WorkflowInputsJson = workflowInputsJson
                 };
                 Jobs.Insert(0, job);
 
@@ -528,6 +704,9 @@ namespace chara2img.ViewModels
                         UpdateSelectedJobStatus();
                         LoadJobImages();
                     }
+
+                    // Save jobs after completion
+                    SaveJobsToSettings();
                 }
             }
             catch (Exception ex)
