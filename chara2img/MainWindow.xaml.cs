@@ -4,6 +4,8 @@ using System.ComponentModel;
 using System.Globalization;
 using System.Windows;
 using System.Windows.Data;
+using System.Windows.Input;
+using System.Windows.Media;
 
 namespace chara2img
 {
@@ -17,6 +19,7 @@ namespace chara2img
             InitializeComponent();
             
             this.Loaded += MainWindow_Loaded;
+            this.StateChanged += MainWindow_StateChanged;
         }
 
         private void MainWindow_Loaded(object sender, RoutedEventArgs e)
@@ -25,6 +28,39 @@ namespace chara2img
             {
                 viewModel.PropertyChanged += ViewModel_PropertyChanged;
             }
+        }
+
+        private void MainWindow_StateChanged(object? sender, EventArgs e)
+        {
+            // Update maximize/restore icon based on window state
+            if (FindName("MaximizeRestorePath") is System.Windows.Shapes.Path path)
+            {
+                if (WindowState == WindowState.Maximized)
+                {
+                    // Show restore icon (two overlapping rectangles)
+                    path.Data = Geometry.Parse("M2,2 L8,2 L8,8 L2,8 Z M0,0 L0,6 L6,6");
+                }
+                else
+                {
+                    // Show maximize icon (single rectangle)
+                    path.Data = Geometry.Parse("M0,0 L10,0 L10,10 L0,10 Z");
+                }
+            }
+        }
+
+        private void MinimizeButton_Click(object sender, RoutedEventArgs e)
+        {
+            WindowState = WindowState.Minimized;
+        }
+
+        private void MaximizeRestoreButton_Click(object sender, RoutedEventArgs e)
+        {
+            WindowState = WindowState == WindowState.Maximized ? WindowState.Normal : WindowState.Maximized;
+        }
+
+        private void CloseButton_Click(object sender, RoutedEventArgs e)
+        {
+            this.Close();
         }
 
         private void ViewModel_PropertyChanged(object? sender, PropertyChangedEventArgs e)
@@ -99,8 +135,6 @@ namespace chara2img
             throw new NotImplementedException();
         }
     }
-
-    // Add this to your existing Converters file or MainWindow.xaml.cs
 
     public class ZeroToVisibilityConverter : IValueConverter
     {

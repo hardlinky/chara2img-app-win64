@@ -7,8 +7,21 @@
         xmlns:vm="clr-namespace:chara2img.ViewModels"
         xmlns:views="clr-namespace:chara2img.Views"
         mc:Ignorable="d"
-        Title="Chara2IMG - ComfyUI Runner" Height="700" Width="1000"
-        Background="{DynamicResource WindowBackgroundBrush}">
+        Title="Chara2IMG - ComfyUI Runner" 
+        Height="700" 
+        Width="1000"
+        Background="{DynamicResource WindowBackgroundBrush}"
+        UseLayoutRounding="True"
+        SnapsToDevicePixels="True">
+
+    <WindowChrome.WindowChrome>
+        <WindowChrome CaptionHeight="32"
+                      ResizeBorderThickness="5"
+                      GlassFrameThickness="0"
+                      CornerRadius="0"
+                      UseAeroCaptionButtons="False"/>
+    </WindowChrome.WindowChrome>
+
     <Window.DataContext>
         <vm:MainViewModel/>
     </Window.DataContext>
@@ -21,36 +34,136 @@
         <local:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
         <local:ZeroToVisibilityConverter x:Key="ZeroToVisibilityConverter"/>
         <local:InputTypeToVisibilityConverter x:Key="InputTypeToVisibilityConverter"/>
+
+        <!-- Title Bar Button Style -->
+        <Style x:Key="TitleBarButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Width" Value="46"/>
+            <Setter Property="Height" Value="32"/>
+            <Setter Property="WindowChrome.IsHitTestVisibleInChrome" Value="True"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="{DynamicResource HoverBrush}"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <!-- Close Button Style (Red on hover) -->
+        <Style x:Key="CloseButtonStyle" TargetType="Button" BasedOn="{StaticResource TitleBarButtonStyle}">
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#E81123"/>
+                    <Setter Property="Foreground" Value="White"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
     </Window.Resources>
 
-    <Grid>
-        <TabControl Background="{DynamicResource ControlBackgroundBrush}"
-                    SelectedIndex="{Binding SelectedTabIndex}">
-            
-            <!-- Workflow Tab -->
-            <TabItem Header="Workflow">
-                <views:WorkflowTab/>
-            </TabItem>
+    <Border BorderBrush="{DynamicResource BorderBrush}" 
+            BorderThickness="1"
+            Background="{DynamicResource WindowBackgroundBrush}">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="32"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
 
-            <!-- Input Tab -->
-            <TabItem Header="Input">
-                <views:InputTab/>
-            </TabItem>
+            <!-- Custom Title Bar -->
+            <Border Grid.Row="0" 
+                    Background="{DynamicResource ControlBackgroundBrush}">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
 
-            <!-- Run Tab -->
-            <TabItem Header="Run">
-                <views:RunTab/>
-            </TabItem>
+                    <!-- Title and Icon -->
+                    <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="10,0,0,0">
+                        <TextBlock Text="Chara2IMG - ComfyUI Runner" 
+                                   Foreground="{DynamicResource TextBrush}"
+                                   FontSize="12"
+                                   VerticalAlignment="Center"/>
+                    </StackPanel>
 
-            <!-- Output Tab -->
-            <TabItem Header="Output">
-                <views:OutputTab/>
-            </TabItem>
+                    <!-- Window Control Buttons -->
+                    <StackPanel Grid.Column="1" Orientation="Horizontal">
+                        <Button Style="{StaticResource TitleBarButtonStyle}" 
+                                Click="MinimizeButton_Click"
+                                ToolTip="Minimize">
+                            <Path Data="M0,6 L10,6" 
+                                  Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" 
+                                  StrokeThickness="1"
+                                  VerticalAlignment="Center"
+                                  HorizontalAlignment="Center"/>
+                        </Button>
+                        <Button Style="{StaticResource TitleBarButtonStyle}" 
+                                Click="MaximizeRestoreButton_Click"
+                                ToolTip="Maximize">
+                            <Path x:Name="MaximizeRestorePath"
+                                  Data="M0,0 L10,0 L10,10 L0,10 Z" 
+                                  Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" 
+                                  StrokeThickness="1"
+                                  Fill="Transparent"
+                                  Stretch="Uniform"
+                                  Width="10"
+                                  Height="10"/>
+                        </Button>
+                        <Button Style="{StaticResource CloseButtonStyle}" 
+                                Click="CloseButton_Click"
+                                ToolTip="Close">
+                            <Path Data="M0,0 L10,10 M10,0 L0,10" 
+                                  Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" 
+                                  StrokeThickness="1.5"
+                                  Stretch="Uniform"
+                                  Width="10"
+                                  Height="10"/>
+                        </Button>
+                    </StackPanel>
+                </Grid>
+            </Border>
 
-            <!-- Settings Tab -->
-            <TabItem Header="Settings">
-                <views:SettingsTab/>
-            </TabItem>
-        </TabControl>
-    </Grid>
+            <!-- Main Content -->
+            <Grid Grid.Row="1">
+                <TabControl Background="{DynamicResource ControlBackgroundBrush}"
+                            SelectedIndex="{Binding SelectedTabIndex}">
+
+                    <!-- Workflow Tab -->
+                    <TabItem Header="Workflow">
+                        <views:WorkflowTab/>
+                    </TabItem>
+
+                    <!-- Input Tab -->
+                    <TabItem Header="Input">
+                        <views:InputTab/>
+                    </TabItem>
+
+                    <!-- Run Tab -->
+                    <TabItem Header="Run">
+                        <views:RunTab/>
+                    </TabItem>
+
+                    <!-- Output Tab -->
+                    <TabItem Header="Output">
+                        <views:OutputTab/>
+                    </TabItem>
+
+                    <!-- Settings Tab -->
+                    <TabItem Header="Settings">
+                        <views:SettingsTab/>
+                    </TabItem>
+                </TabControl>
+            </Grid>
+        </Grid>
+    </Border>
 </Window>
