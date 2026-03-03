@@ -439,13 +439,6 @@ namespace chara2img.ViewModels
             {
                 LoadJobInputsInternal(job);
                 StatusMessage = $"Loaded inputs from job {job.Id}";
-                
-                // Show a notification to the user
-                MessageBox.Show(
-                    $"Job inputs have been loaded into the Input tab.\n\nYou can now review and modify them before running a new job.",
-                    "Inputs Loaded",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Information);
             }
             catch (Exception ex)
             {
@@ -456,64 +449,93 @@ namespace chara2img.ViewModels
         private void LoadJobInputsInternal(RunpodJob job)
         {
             if (string.IsNullOrEmpty(job.WorkflowInputsJson))
-                return;
-
-            // Deserialize the saved workflow inputs
-            var savedInputs = JsonSerializer.Deserialize<Dictionary<string, ObservableCollection<WorkflowInput>>>(
-                job.WorkflowInputsJson,
-                new JsonSerializerOptions 
-                { 
-                    Converters = { new WorkflowInputConverter() }
-                });
-
-            if (savedInputs == null)
-                return;
-
-            // If we don't have current workflow inputs, just use the saved ones
-            if (WorkflowInputs.Count == 0)
             {
-                WorkflowInputs = savedInputs;
-                OnPropertyChanged(nameof(WorkflowInputs));
                 return;
             }
 
-            // Merge the saved values into the current workflow inputs
-            foreach (var category in savedInputs)
+            try
             {
-                if (!WorkflowInputs.ContainsKey(category.Key))
-                    continue;
+                // Deserialize the saved workflow inputs
+                var savedInputs = JsonSerializer.Deserialize<Dictionary<string, ObservableCollection<WorkflowInput>>>(
+                    job.WorkflowInputsJson,
+                    new JsonSerializerOptions 
+                    { 
+                        Converters = { new WorkflowInputConverter() },
+                        PropertyNameCaseInsensitive = true
+                    });
 
-                var currentInputs = WorkflowInputs[category.Key];
-                
-                foreach (var savedInput in category.Value)
+                if (savedInputs == null || savedInputs.Count == 0)
                 {
-                    // Find matching input in current workflow
-                    var currentInput = currentInputs.FirstOrDefault(i => 
-                        i.NodeId == savedInput.NodeId && 
-                        i.DisplayName == savedInput.DisplayName);
+                    return;
+                }
 
-                    if (currentInput != null)
+                // If we don't have current workflow inputs, just use the saved ones
+                if (WorkflowInputs.Count == 0)
+                {
+                    WorkflowInputs = savedInputs;
+                    OnPropertyChanged(nameof(WorkflowInputs));
+                    return;
+                }
+
+                // Merge the saved values into the current workflow inputs
+                foreach (var category in savedInputs)
+                {
+                    if (!WorkflowInputs.ContainsKey(category.Key))
+                        continue;
+
+                    var currentInputs = WorkflowInputs[category.Key];
+                    
+                    foreach (var savedInput in category.Value)
                     {
-                        // Copy values based on type
-                        if (currentInput is TextInput currentText && savedInput is TextInput savedText)
+                        if (savedInput == null) continue;
+
+                        var currentInput = currentInputs.FirstOrDefault(i => 
+                            i != null &&
+                            i.NodeId == savedInput.NodeId && 
+                            i.DisplayName == savedInput.DisplayName);
+
+                        if (currentInput != null)
                         {
-                            currentText.Value = savedText.Value;
-                        }
-                        else if (currentInput is NumberInput currentNumber && savedInput is NumberInput savedNumber)
-                        {
-                            currentNumber.Value = savedNumber.Value;
-                        }
-                        else if (currentInput is NumberPairInput currentPair && savedInput is NumberPairInput savedPair)
-                        {
-                            currentPair.Value1 = savedPair.Value1;
-                            currentPair.Value2 = savedPair.Value2;
+                            if (currentInput is TextInput currentText && savedInput is TextInput savedText)
+                            {
+                                currentText.Value = savedText.Value ?? "";
+                            }
+                            else if (currentInput is NumberInput currentNumber && savedInput is NumberInput savedNumber)
+                            {
+                                currentNumber.Value = savedNumber.Value ?? "";
+                            }
+                            else if (currentInput is NumberPairInput currentPair && savedInput is NumberPairInput savedPair)
+                            {
+                                currentPair.Value1 = savedPair.Value1;
+                                currentPair.Value2 = savedPair.Value2;
+                            }
+                            else if (currentInput is LoraListInput currentLora && savedInput is LoraListInput savedLora)
+                            {
+                                currentLora.Loras.Clear();
+                                if (savedLora.Loras != null)
+                                {
+                                    foreach (var lora in savedLora.Loras)
+                                    {
+                                        currentLora.Loras.Add(new LoraItem 
+                                        { 
+                                            Enabled = lora.Enabled,
+                                            LoraName = lora.LoraName,
+                                            Strength = lora.Strength
+                                        });
+                                    }
+                                }
+                            }
                         }
                     }
                 }
-            }
 
-            // Trigger UI update
-            OnPropertyChanged(nameof(WorkflowInputs));
+                // Trigger UI update
+                OnPropertyChanged(nameof(WorkflowInputs));
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Failed to load job inputs:\n{ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
         private void SaveJobsToSettings()
@@ -653,7 +675,8 @@ namespace chara2img.ViewModels
                     new JsonSerializerOptions 
                     { 
                         WriteIndented = false,
-                        Converters = { new WorkflowInputConverter() }
+                        Converters = { new WorkflowInputConverter() },
+                        PropertyNameCaseInsensitive = true
                     });
 
                 var job = new RunpodJob
