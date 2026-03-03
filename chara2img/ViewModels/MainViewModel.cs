@@ -43,10 +43,14 @@ namespace chara2img.ViewModels
         {
             get => _apiKey;
             set 
-            { 
-                _apiKey = value; 
-                OnPropertyChanged();
-                SaveSettings();
+            {
+                if (_apiKey != value)
+                {
+                    _apiKey = value;
+                    _runpodService = null; // Invalidate service when credentials change
+                    OnPropertyChanged();
+                    SaveSettings();
+                }
             }
         }
 
@@ -54,10 +58,14 @@ namespace chara2img.ViewModels
         {
             get => _endpointId;
             set 
-            { 
-                _endpointId = value; 
-                OnPropertyChanged();
-                SaveSettings();
+            {
+                if (_endpointId != value)
+                {
+                    _endpointId = value;
+                    _runpodService = null; // Invalidate service when credentials change
+                    OnPropertyChanged();
+                    SaveSettings();
+                }
             }
         }
 
@@ -217,6 +225,8 @@ namespace chara2img.ViewModels
                 {
                     _workflowFilePath = _settings.LastWorkflowPath;
                     _workflowJson = File.ReadAllText(_settings.LastWorkflowPath);
+                    // Parse inputs after loading workflow
+                    ParseWorkflowInputs();
                 }
                 catch
                 {
@@ -233,6 +243,17 @@ namespace chara2img.ViewModels
             OnPropertyChanged(nameof(OutputFolder));
             OnPropertyChanged(nameof(WorkflowFilePath));
             OnPropertyChanged(nameof(WorkflowJson));
+            OnPropertyChanged(nameof(HasWorkflow));
+            OnPropertyChanged(nameof(WorkflowInputs)); // Add this to ensure inputs are updated
+        }
+
+        private RunpodService GetOrCreateService()
+        {
+            if (_runpodService == null)
+            {
+                _runpodService = new RunpodService(_apiKey, _endpointId);
+            }
+            return _runpodService;
         }
 
         private void ShowImage(BitmapImage? image)
@@ -307,8 +328,8 @@ namespace chara2img.ViewModels
 
             try
             {
-                _runpodService = new RunpodService(_apiKey, _endpointId);
-                var (response, rawJson) = await _runpodService.GetJobStatusAsync(_selectedJob.Id);
+                var service = GetOrCreateService();
+                var (response, rawJson) = await service.GetJobStatusAsync(_selectedJob.Id);
 
                 if (response != null)
                 {
@@ -442,11 +463,11 @@ namespace chara2img.ViewModels
             {
                 StatusMessage = "Submitting job...";
 
-                // Apply inputs to workflow
+                var service = GetOrCreateService();
                 var modifiedWorkflow = WorkflowInputApplier.ApplyInputs(WorkflowJson, WorkflowInputs);
                 var workflow = JsonSerializer.Deserialize<object>(modifiedWorkflow);
 
-                var jobId = await _runpodService!.SubmitJobAsync(workflow!);
+                var jobId = await service.SubmitJobAsync(workflow!);
                 
                 if (string.IsNullOrEmpty(jobId))
                 {
@@ -465,7 +486,7 @@ namespace chara2img.ViewModels
                 StatusMessage = $"Job {jobId} submitted. Polling...";
 
                 var progress = new Progress<string>(msg => StatusMessage = msg);
-                var completedJob = await _runpodService.PollJobUntilCompleteAsync(
+                var completedJob = await service.PollJobUntilCompleteAsync(
                     job, 
                     progress: progress,
                     onStatusUpdate: rawJson => 
@@ -538,7 +559,7 @@ namespace chara2img.ViewModels
                         // Save to disk
                         var fileName = base64Images.Count > 1 
                             ? $"output_{jobId}_{imageIndex}_{DateTime.Now:yyyyMMdd_HHmmss}.png"
-                            : $"output_{jobId}_{DateTime.Now:yyyyMMdd_HHmmss}.png";
+                            : $"output_{jobId}_{DateTime.Now:yyyyMMdd_HHmms}.png";
                         var filePath = Path.Combine(_outputFolder, fileName);
                         File.WriteAllBytes(filePath, imageBytes);
                         filePaths.Add(filePath);

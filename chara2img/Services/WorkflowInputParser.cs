@@ -154,17 +154,216 @@ namespace chara2img.Services
                 };
             }
 
-            // Placeholder for future nodes
-            return new TextInput
+            // Config - STEPS (integer)
+            if (title.Contains("Config - STEPS"))
             {
-                NodeId = nodeId,
-                NodeTitle = title,
-                Category = category,
-                DisplayName = displayName,
-                InputType = "text",
-                InputKey = "value",
-                Value = ""
-            };
+                var value = inputs.TryGetProperty("int", out var intVal) ? intVal.GetInt32().ToString() : "30";
+                return new NumberInput
+                {
+                    NodeId = nodeId,
+                    NodeTitle = title,
+                    Category = category,
+                    DisplayName = displayName,
+                    InputType = "number",
+                    InputKey = "int",
+                    Value = value,
+                    IsInteger = true
+                };
+            }
+
+            // Config - CFG (double)
+            if (title.Contains("Config - CFG"))
+            {
+                var value = inputs.TryGetProperty("cfg", out var cfg) ? cfg.GetDouble().ToString("F1") : "6.0";
+                return new NumberInput
+                {
+                    NodeId = nodeId,
+                    NodeTitle = title,
+                    Category = category,
+                    DisplayName = displayName,
+                    InputType = "number",
+                    InputKey = "cfg",
+                    Value = value,
+                    IsInteger = false
+                };
+            }
+
+            // Config - Scheduler (single line text)
+            if (title.Contains("Config - Scheduler"))
+            {
+                var value = inputs.TryGetProperty("scheduler", out var sched) ? sched.GetString() ?? "" : "";
+                return new TextInput
+                {
+                    NodeId = nodeId,
+                    NodeTitle = title,
+                    Category = category,
+                    DisplayName = displayName,
+                    InputType = "text",
+                    InputKey = "scheduler",
+                    Value = value
+                };
+            }
+
+            // Config - Sampler (single line text)
+            if (title.Contains("Config - Sampler"))
+            {
+                var value = inputs.TryGetProperty("sampler_name", out var sampler) ? sampler.GetString() ?? "" : "";
+                return new TextInput
+                {
+                    NodeId = nodeId,
+                    NodeTitle = title,
+                    Category = category,
+                    DisplayName = displayName,
+                    InputType = "text",
+                    InputKey = "sampler_name",
+                    Value = value
+                };
+            }
+
+            // Config - Denoise (double)
+            if (title.Contains("Config - Denoise"))
+            {
+                var value = inputs.TryGetProperty("float", out var floatVal) ? floatVal.GetDouble().ToString("F2") : "0.50";
+                return new NumberInput
+                {
+                    NodeId = nodeId,
+                    NodeTitle = title,
+                    Category = category,
+                    DisplayName = displayName,
+                    InputType = "number",
+                    InputKey = "float",
+                    Value = value,
+                    IsInteger = false
+                };
+            }
+
+            // Config - Empty Latent Images (batch_size integer)
+            if (title.Contains("Config - Empty Latent Images"))
+            {
+                var value = inputs.TryGetProperty("batch_size", out var batch) ? batch.GetInt32().ToString() : "1";
+                return new NumberInput
+                {
+                    NodeId = nodeId,
+                    NodeTitle = title,
+                    Category = category,
+                    DisplayName = "Batch Size",
+                    InputType = "number",
+                    InputKey = "batch_size",
+                    Value = value,
+                    IsInteger = true
+                };
+            }
+
+            // Character - Sex (single line)
+            if (title.Contains("Character - Sex"))
+            {
+                var value = inputs.TryGetProperty("value", out var val) ? val.GetString() ?? "" : "";
+                return new TextInput
+                {
+                    NodeId = nodeId,
+                    NodeTitle = title,
+                    Category = category,
+                    DisplayName = displayName,
+                    InputType = "text",
+                    InputKey = "value",
+                    Value = value
+                };
+            }
+
+            // Character - Name (single line)
+            if (title.Contains("Character - Name"))
+            {
+                var value = inputs.TryGetProperty("value", out var val) ? val.GetString() ?? "" : "";
+                return new TextInput
+                {
+                    NodeId = nodeId,
+                    NodeTitle = title,
+                    Category = category,
+                    DisplayName = displayName,
+                    InputType = "text",
+                    InputKey = "value",
+                    Value = value
+                };
+            }
+
+            // Character - Eyes, Hair, Face, Body, Body Details, Negative (multiline)
+            if (title.Contains("Character - Eyes") || 
+                title.Contains("Character - Hair") || 
+                title.Contains("Character - Face") ||
+                title.Contains("Character - Body Details") ||
+                title.Contains("Character - Body") ||
+                title.Contains("Character - Negative"))
+            {
+                var value = inputs.TryGetProperty("value", out var val) ? val.GetString() ?? "" : "";
+                return new TextInput
+                {
+                    NodeId = nodeId,
+                    NodeTitle = title,
+                    Category = category,
+                    DisplayName = displayName,
+                    InputType = "multiline",
+                    InputKey = "value",
+                    Value = value
+                };
+            }
+
+            // Pose - Arms, Legs, Face Expression (multiline with 'text' key)
+            if (title.Contains("Pose - Arms") || 
+                title.Contains("Pose - Legs") || 
+                title.Contains("Pose - Face Expression"))
+            {
+                var value = inputs.TryGetProperty("text", out var text) ? text.GetString() ?? "" : "";
+                return new TextInput
+                {
+                    NodeId = nodeId,
+                    NodeTitle = title,
+                    Category = category,
+                    DisplayName = displayName,
+                    InputType = "multiline",
+                    InputKey = "text",
+                    Value = value
+                };
+            }
+
+            // Costume - Name (single line with 'value' key)
+            if (title.Contains("Costume - Name"))
+            {
+                var value = inputs.TryGetProperty("value", out var val) ? val.GetString() ?? "" : "";
+                return new TextInput
+                {
+                    NodeId = nodeId,
+                    NodeTitle = title,
+                    Category = category,
+                    DisplayName = displayName,
+                    InputType = "text",
+                    InputKey = "value",
+                    Value = value
+                };
+            }
+
+            // Costume - Face, Head, Top, Bottom, Shoes, Negative (multiline with 'text' key)
+            if (title.Contains("Costume - Face") || 
+                title.Contains("Costume - Head") || 
+                title.Contains("Costume - Top") ||
+                title.Contains("Costume - Bottom") ||
+                title.Contains("Costume - Shoes") ||
+                title.Contains("Costume - Negative"))
+            {
+                var value = inputs.TryGetProperty("text", out var text) ? text.GetString() ?? "" : "";
+                return new TextInput
+                {
+                    NodeId = nodeId,
+                    NodeTitle = title,
+                    Category = category,
+                    DisplayName = displayName,
+                    InputType = "multiline",
+                    InputKey = "text",
+                    Value = value
+                };
+            }
+
+            // Placeholder for future nodes - return null so they don't show up
+            return null;
         }
 
         private static string ExtractCategory(string title)

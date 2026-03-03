@@ -67,6 +67,31 @@ namespace chara2img.Models
         }
     }
 
+    public class NumberInput : WorkflowInput
+    {
+        private string _value = "";
+        private string _inputKey = "";
+        private bool _isInteger;
+
+        public string InputKey
+        {
+            get => _inputKey;
+            set { _inputKey = value; OnPropertyChanged(); }
+        }
+
+        public string Value
+        {
+            get => _value;
+            set { _value = value; OnPropertyChanged(); }
+        }
+
+        public bool IsInteger
+        {
+            get => _isInteger;
+            set { _isInteger = value; OnPropertyChanged(); }
+        }
+    }
+
     public class NumberPairInput : WorkflowInput
     {
         private int _value1;

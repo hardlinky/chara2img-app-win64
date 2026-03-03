@@ -1,0 +1,109 @@
+﻿<UserControl x:Class="chara2img.Views.RunTab"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:local="clr-namespace:chara2img"
+             mc:Ignorable="d" 
+             d:DesignHeight="450" d:DesignWidth="800">
+    <UserControl.Resources>
+        <local:InverseBoolToVisibilityConverter x:Key="InverseBoolToVisibilityConverter"/>
+        <local:ExpandCollapseTextConverter x:Key="ExpandCollapseTextConverter"/>
+    </UserControl.Resources>
+
+    <Grid Margin="20" Background="{DynamicResource {x:Static SystemColors.WindowBrushKey}}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="2*"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,15">
+            <Button Content="▶ Run ComfyUI Job" 
+                    Command="{Binding RunJobCommand}"
+                    Padding="20,10"
+                    FontWeight="SemiBold"
+                    Margin="0,0,10,0"/>
+            <Border Background="{DynamicResource {x:Static SystemColors.InfoBrushKey}}"
+                    Padding="10,5"
+                    CornerRadius="3"
+                    Visibility="{Binding HasWorkflow, Converter={StaticResource InverseBoolToVisibilityConverter}}">
+                <TextBlock Text="⚠ No workflow loaded"
+                           Foreground="{DynamicResource {x:Static SystemColors.InfoTextBrushKey}}"
+                           FontWeight="SemiBold"/>
+            </Border>
+        </StackPanel>
+
+        <TextBlock Grid.Row="1" 
+                   Text="{Binding StatusMessage}" 
+                   FontWeight="Bold" 
+                   Foreground="{DynamicResource {x:Static SystemColors.WindowTextBrushKey}}"
+                   Margin="0,0,0,15"/>
+
+        <ListView Grid.Row="2" 
+                  x:Name="JobsListView"
+                  ItemsSource="{Binding Jobs}"
+                  SelectedItem="{Binding SelectedJob}"
+                  Background="{DynamicResource {x:Static SystemColors.WindowBrushKey}}"
+                  Foreground="{DynamicResource {x:Static SystemColors.WindowTextBrushKey}}"
+                  MouseDoubleClick="JobsListView_MouseDoubleClick">
+            <ListView.View>
+                <GridView>
+                    <GridViewColumn Header="Job ID" Width="200" DisplayMemberBinding="{Binding Id}"/>
+                    <GridViewColumn Header="Status" Width="100" DisplayMemberBinding="{Binding Status}"/>
+                    <GridViewColumn Header="Created" Width="150" DisplayMemberBinding="{Binding CreatedAt, StringFormat='{}{0:yyyy-MM-dd HH:mm:ss}'}"/>
+                    <GridViewColumn Header="Completed" Width="150" DisplayMemberBinding="{Binding CompletedAt, StringFormat='{}{0:yyyy-MM-dd HH:mm:ss}'}"/>
+                    <GridViewColumn Header="Duration" Width="100" DisplayMemberBinding="{Binding Duration}"/>
+                </GridView>
+            </ListView.View>
+        </ListView>
+
+        <GridSplitter Grid.Row="3" 
+                      Height="5" 
+                      HorizontalAlignment="Stretch" 
+                      Background="{DynamicResource {x:Static SystemColors.ControlBrushKey}}"
+                      Margin="0,5"/>
+
+        <!-- Status Response Viewer -->
+        <Grid Grid.Row="4">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,5,0,10">
+                <TextBlock Text="Latest Status Response" 
+                           FontWeight="Bold"
+                           Foreground="{DynamicResource {x:Static SystemColors.WindowTextBrushKey}}"
+                           VerticalAlignment="Center"
+                           Margin="0,0,15,0"/>
+                <Button Content="🔄 Refresh" 
+                        Command="{Binding RefreshJobStatusCommand}"
+                        Padding="10,5"
+                        Margin="0,0,10,0"/>
+                <Button Content="{Binding IsStatusResponseExpanded, Converter={StaticResource ExpandCollapseTextConverter}}" 
+                        Command="{Binding ToggleStatusResponseCommand}"
+                        Padding="10,5"/>
+            </StackPanel>
+
+            <Border Grid.Row="1" 
+                    BorderBrush="{DynamicResource {x:Static SystemColors.ActiveBorderBrushKey}}" 
+                    BorderThickness="1"
+                    Background="{DynamicResource {x:Static SystemColors.WindowBrushKey}}">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
+                    <TextBox Text="{Binding StatusResponsePreview, Mode=OneWay}"
+                             IsReadOnly="True"
+                             TextWrapping="Wrap"
+                             FontFamily="Consolas"
+                             FontSize="11"
+                             Padding="10"
+                             BorderThickness="0"
+                             Background="{DynamicResource {x:Static SystemColors.WindowBrushKey}}"
+                             Foreground="{DynamicResource {x:Static SystemColors.WindowTextBrushKey}}"/>
+                </ScrollViewer>
+            </Border>
+        </Grid>
+    </Grid>
+</UserControl>

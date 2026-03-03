@@ -34,6 +34,24 @@ namespace chara2img.Services
                     {
                         nodeInputs[textInput.InputKey] = textInput.Value;
                     }
+                    else if (input is NumberInput numberInput)
+                    {
+                        // Parse and convert the value
+                        if (numberInput.IsInteger)
+                        {
+                            if (int.TryParse(numberInput.Value, out var intValue))
+                            {
+                                nodeInputs[numberInput.InputKey] = intValue;
+                            }
+                        }
+                        else
+                        {
+                            if (double.TryParse(numberInput.Value, out var doubleValue))
+                            {
+                                nodeInputs[numberInput.InputKey] = doubleValue;
+                            }
+                        }
+                    }
                     else if (input is NumberPairInput numberPair)
                     {
                         nodeInputs[numberPair.InputKey1] = numberPair.Value1;

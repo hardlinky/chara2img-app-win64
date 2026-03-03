@@ -1,0 +1,62 @@
+﻿<UserControl x:Class="chara2img.Views.WorkflowTab"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             mc:Ignorable="d" 
+             d:DesignHeight="450" d:DesignWidth="800">
+    <Grid Margin="20" Background="{DynamicResource {x:Static SystemColors.WindowBrushKey}}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock Grid.Row="0" 
+                   Text="Paste your ComfyUI workflow JSON or load from a file:"
+                   Foreground="{DynamicResource {x:Static SystemColors.WindowTextBrushKey}}"
+                   FontWeight="SemiBold"
+                   Margin="0,0,0,10"/>
+
+        <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,10">
+            <Button Content="Load from File..." 
+                    Command="{Binding LoadWorkflowCommand}"
+                    Padding="15,8"
+                    Margin="0,0,10,0"/>
+            <Button Content="Validate JSON" 
+                    Command="{Binding ValidateWorkflowCommand}"
+                    Padding="15,8"
+                    Margin="0,0,10,0"/>
+            <TextBlock Text="{Binding WorkflowFilePath}"
+                       Foreground="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}"
+                       VerticalAlignment="Center"
+                       FontStyle="Italic"
+                       TextTrimming="CharacterEllipsis"/>
+        </StackPanel>
+
+        <Border Grid.Row="2" 
+                BorderBrush="{DynamicResource {x:Static SystemColors.ActiveBorderBrushKey}}" 
+                BorderThickness="1"
+                Background="{DynamicResource {x:Static SystemColors.WindowBrushKey}}">
+            <TextBox x:Name="WorkflowTextBox"
+                     Text="{Binding WorkflowJson, UpdateSourceTrigger=PropertyChanged}"
+                     AcceptsReturn="True"
+                     TextWrapping="Wrap"
+                     VerticalScrollBarVisibility="Auto"
+                     HorizontalScrollBarVisibility="Auto"
+                     FontFamily="Consolas"
+                     FontSize="12"
+                     Padding="5"
+                     Background="{DynamicResource {x:Static SystemColors.WindowBrushKey}}"
+                     Foreground="{DynamicResource {x:Static SystemColors.WindowTextBrushKey}}"/>
+        </Border>
+
+        <StackPanel Grid.Row="3" Margin="0,10,0,0">
+            <TextBlock Foreground="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}"
+                       TextWrapping="Wrap">
+                <Run Text="💡 Tip: Export your ComfyUI workflow as JSON (API format) and paste it here, or save it as request.json and load it using the button above."/>
+            </TextBlock>
+        </StackPanel>
+    </Grid>
+</UserControl>
