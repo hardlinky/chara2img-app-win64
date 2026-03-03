@@ -65,6 +65,12 @@ namespace chara2img.Services
                 latestRawResponse = rawJson;
                 onStatusUpdate?.Invoke(rawJson);
                 
+                // Update worker ID if available
+                if (!string.IsNullOrEmpty(response?.WorkerId))
+                {
+                    job.WorkerId = response.WorkerId;
+                }
+                
                 // Only count attempts when job is actually processing
                 if (response?.Status != "IN_QUEUE")
                 {
@@ -83,7 +89,7 @@ namespace chara2img.Services
                     job.AllImagesBase64 = ExtractAllImagesFromResponse(response);
                     job.ImageBase64 = job.AllImagesBase64?.FirstOrDefault();
                     job.CompletedAt = DateTime.Now;
-                    job.RawStatusResponse = TruncateBase64InJson(rawJson);
+                    job.RawStatusResponse = rawJson; // Store raw, untruncated
                     return job;
                 }
                 else if (response?.Status == "FAILED")
@@ -91,7 +97,7 @@ namespace chara2img.Services
                     job.Status = "failed";
                     job.ErrorMessage = response.Error;
                     job.CompletedAt = DateTime.Now;
-                    job.RawStatusResponse = rawJson;
+                    job.RawStatusResponse = rawJson; // Store raw, untruncated
                     return job;
                 }
 
@@ -122,21 +128,31 @@ namespace chara2img.Services
             return images;
         }
 
-        private static string TruncateBase64InJson(string json)
+        public static string TruncateBase64InJson(string json, bool removeCompletely = false)
         {
-            // Find base64 strings (they're typically very long alphanumeric strings)
-            // and truncate them to show first 100 and last 50 characters
-            var regex = new Regex(@"""([A-Za-z0-9+/]{200,}={0,2})""");
-            return regex.Replace(json, match =>
+            // Match "data": followed by a long base64 string (could be on multiple lines in formatted JSON)
+            // This pattern handles both compact and formatted JSON
+            var regex = new Regex(@"""data"":\s*""([A-Za-z0-9+/\\u002B\\u002F=\r\n\s]{100,})""", RegexOptions.Singleline);
+            
+            var result = regex.Replace(json, match =>
             {
                 var base64 = match.Groups[1].Value;
-                if (base64.Length > 200)
+                // Remove any whitespace/newlines/escape sequences to get true length
+                var cleanBase64 = base64.Replace("\\u002B", "+").Replace("\\u002F", "/").Replace("\r", "").Replace("\n", "").Replace(" ", "");
+                
+                if (removeCompletely)
                 {
-                    var truncated = $"{base64.Substring(0, 100)}...[{base64.Length - 150} characters truncated]...{base64.Substring(base64.Length - 50)}";
-                    return $"\"{truncated}\"";
+                    // When collapsed, completely hide the base64 value
+                    return $"\"data\": \"[truncated {cleanBase64.Length} characters]\"";
                 }
-                return match.Value;
+                else
+                {
+                    // When expanded, don't truncate at all - show full base64
+                    return match.Value;
+                }
             });
+            
+            return result;
         }
     }
 }

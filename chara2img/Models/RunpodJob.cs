@@ -10,6 +10,7 @@ namespace chara2img.Models
     {
         private string _status = "pending";
         private DateTime? _completedAt;
+        private string? _workerId;
 
         public event PropertyChangedEventHandler? PropertyChanged;
 
@@ -23,6 +24,19 @@ namespace chara2img.Models
                 if (_status != value)
                 {
                     _status = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+        public string? WorkerId
+        {
+            get => _workerId;
+            set
+            {
+                if (_workerId != value)
+                {
+                    _workerId = value;
                     OnPropertyChanged();
                 }
             }
@@ -110,6 +124,9 @@ namespace chara2img.Models
         
         [JsonPropertyName("error")]
         public string? Error { get; set; }
+
+        [JsonPropertyName("workerId")]
+        public string? WorkerId { get; set; }
     }
 
     public class RunpodOutput

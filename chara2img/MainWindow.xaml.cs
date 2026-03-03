@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Globalization;
 using System.Windows;
 using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Media.Imaging;
 
 namespace chara2img
 {
@@ -45,6 +47,20 @@ namespace chara2img
                     // Show maximize icon (single rectangle)
                     path.Data = Geometry.Parse("M0,0 L10,0 L10,10 L0,10 Z");
                 }
+            }
+        }
+
+        private void TitleBar_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            if (e.ClickCount == 2)
+            {
+                // Double-click to maximize/restore
+                MaximizeRestoreButton_Click(sender, e);
+            }
+            else
+            {
+                // Single click to drag
+                this.DragMove();
             }
         }
 
@@ -173,6 +189,26 @@ namespace chara2img
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+    public class ImageIndexConverter : IMultiValueConverter
+    {
+        public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture)
+        {
+            if (values.Length == 2 && 
+                values[0] is BitmapImage currentImage && 
+                values[1] is ObservableCollection<BitmapImage> images)
+            {
+                var index = images.IndexOf(currentImage);
+                return index >= 0 ? (index + 1).ToString() : "-";
+            }
+            return "-";
+        }
+
+        public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture)
         {
             throw new NotImplementedException();
         }

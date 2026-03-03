@@ -34,7 +34,8 @@
         <local:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
         <local:ZeroToVisibilityConverter x:Key="ZeroToVisibilityConverter"/>
         <local:InputTypeToVisibilityConverter x:Key="InputTypeToVisibilityConverter"/>
-
+        <local:ImageIndexConverter x:Key="ImageIndexConverter"/>
+        
         <!-- Title Bar Button Style -->
         <Style x:Key="TitleBarButtonStyle" TargetType="Button">
             <Setter Property="Background" Value="Transparent"/>

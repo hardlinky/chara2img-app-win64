@@ -53,10 +53,13 @@
                   SelectedItem="{Binding SelectedJob}"
                   Background="{DynamicResource WindowBackgroundBrush}"
                   Foreground="{DynamicResource TextBrush}"
-                  MouseDoubleClick="JobsListView_MouseDoubleClick">
+                  MouseDoubleClick="JobsListView_MouseDoubleClick"
+                  KeyDown="JobsListView_KeyDown"
+                  SelectionMode="Extended">
             <ListView.View>
                 <GridView>
                     <GridViewColumn Header="Job ID" Width="130" DisplayMemberBinding="{Binding Id}"/>
+                    <GridViewColumn Header="Worker ID" Width="120" DisplayMemberBinding="{Binding WorkerId}"/>
                     <GridViewColumn Header="Status" Width="70" DisplayMemberBinding="{Binding Status}"/>
                     <GridViewColumn Header="Created" Width="120" DisplayMemberBinding="{Binding CreatedAt, StringFormat='{}{0:yyyy-MM-dd HH:mm:ss}'}"/>
                     <GridViewColumn Header="Completed" Width="120" DisplayMemberBinding="{Binding CompletedAt, StringFormat='{}{0:yyyy-MM-dd HH:mm:ss}'}"/>

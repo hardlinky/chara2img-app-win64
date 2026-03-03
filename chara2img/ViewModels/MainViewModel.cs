@@ -160,13 +160,27 @@ namespace chara2img.ViewModels
         {
             get
             {
-                if (_isStatusResponseExpanded || string.IsNullOrEmpty(_selectedJobStatusResponse))
+                if (string.IsNullOrEmpty(_selectedJobStatusResponse))
                     return _selectedJobStatusResponse;
 
-                // Show only first 500 characters when collapsed
-                return _selectedJobStatusResponse.Length > 500 
-                    ? _selectedJobStatusResponse.Substring(0, 500) + "...\n\n[Click 'Show Full Response' to see more]"
-                    : _selectedJobStatusResponse;
+                if (_isStatusResponseExpanded)
+                {
+                    // When expanded, show full JSON without any base64 truncation
+                    return _selectedJobStatusResponse;
+                }
+                else
+                {
+                    // When collapsed: FIRST truncate base64, THEN limit to 500 chars
+                    var withTruncatedBase64 = RunpodService.TruncateBase64InJson(_selectedJobStatusResponse, removeCompletely: true);
+                    
+                    // Now limit the overall length
+                    if (withTruncatedBase64.Length > 500)
+                    {
+                        return withTruncatedBase64.Substring(0, 500) + "...\n\n[Click 'Show Full Response' to see more]";
+                    }
+                    
+                    return withTruncatedBase64;
+                }
             }
         }
 
@@ -431,7 +445,7 @@ namespace chara2img.ViewModels
         {
             if (_selectedJob != null && !string.IsNullOrEmpty(_selectedJob.RawStatusResponse))
             {
-                // Format JSON for better readability
+                // Format JSON for better readability - keep raw data
                 try
                 {
                     var jsonDoc = JsonDocument.Parse(_selectedJob.RawStatusResponse);
@@ -463,6 +477,12 @@ namespace chara2img.ViewModels
                 {
                     _selectedJob.Status = response.Status?.ToLower() ?? "unknown";
                     _selectedJob.RawStatusResponse = rawJson;
+                    
+                    // Update worker ID if available
+                    if (!string.IsNullOrEmpty(response.WorkerId))
+                    {
+                        _selectedJob.WorkerId = response.WorkerId;
+                    }
                     
                     // Trigger UI update for the Jobs collection
                     OnPropertyChanged(nameof(Jobs));

@@ -12,6 +12,7 @@
         <local:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
         <local:InverseBoolToVisibilityConverter x:Key="InverseBoolToVisibilityConverter"/>
         <local:ZeroToVisibilityConverter x:Key="ZeroToVisibilityConverter"/>
+        <local:ImageIndexConverter x:Key="ImageIndexConverter"/>
     </UserControl.Resources>
     
     <Grid Margin="20" Background="{DynamicResource WindowBackgroundBrush}">
@@ -20,10 +21,36 @@
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <TextBlock Grid.Row="0" 
-                   Text="💡 Tip: Use mouse wheel to zoom, click and drag to pan, arrow keys to navigate" 
-                   Foreground="{DynamicResource SecondaryTextBrush}"
-                   Margin="0,0,0,10"/>
+        <!-- Tip Bar with Image Counter -->
+        <Grid Grid.Row="0" Margin="0,0,0,10">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            
+            <TextBlock Grid.Column="0"
+                       Text="💡 Tip: Use mouse wheel to zoom, click and drag to pan, arrow keys to navigate" 
+                       Foreground="{DynamicResource SecondaryTextBrush}"
+                       VerticalAlignment="Center"/>
+            
+            <TextBlock Grid.Column="1"
+                       Foreground="{DynamicResource SecondaryTextBrush}"
+                       VerticalAlignment="Center"
+                       FontWeight="SemiBold"
+                       Visibility="{Binding IsGalleryView, Converter={StaticResource InverseBoolToVisibilityConverter}}">
+                <Run Text="Image "/>
+                <Run>
+                    <Run.Text>
+                        <MultiBinding Converter="{StaticResource ImageIndexConverter}">
+                            <Binding Path="CurrentImage" Mode="OneWay"/>
+                            <Binding Path="CurrentImages" Mode="OneWay"/>
+                        </MultiBinding>
+                    </Run.Text>
+                </Run>
+                <Run Text=" of "/>
+                <Run Text="{Binding CurrentImages.Count, Mode=OneWay}"/>
+            </TextBlock>
+        </Grid>
 
         <!-- Gallery View -->
         <Grid Grid.Row="1" Visibility="{Binding IsGalleryView, Converter={StaticResource BoolToVisibilityConverter}}">
@@ -108,13 +135,6 @@
                     </Image>
                 </ScrollViewer>
             </Border>
-
-            <TextBlock Grid.Row="1"
-                       Text="💡 Use mouse wheel to zoom, click and drag to pan, arrow keys to navigate" 
-                       Foreground="{DynamicResource SecondaryTextBrush}"
-                       HorizontalAlignment="Center"
-                       VerticalAlignment="Bottom"
-                       Margin="0,0,0,10"/>
         </Grid>
     </Grid>
 </UserControl>
