@@ -57,6 +57,7 @@ namespace chara2img.Services
             Action<string>? onStatusUpdate = null)
         {
             string? latestRawResponse = null;
+            int actualAttempts = 0; // Count only non-queued attempts
 
             for (int i = 0; i < maxAttempts; i++)
             {
@@ -64,7 +65,17 @@ namespace chara2img.Services
                 latestRawResponse = rawJson;
                 onStatusUpdate?.Invoke(rawJson);
                 
-                progress?.Report($"Attempt {i + 1}/{maxAttempts}: Status = {response?.Status}");
+                // Only count attempts when job is actually processing
+                if (response?.Status != "IN_QUEUE")
+                {
+                    actualAttempts++;
+                }
+
+                var statusDisplay = response?.Status == "IN_QUEUE" 
+                    ? $"Status = {response?.Status} (waiting...)"
+                    : $"Attempt {actualAttempts}/{maxAttempts}: Status = {response?.Status}";
+                
+                progress?.Report(statusDisplay);
 
                 if (response?.Status == "COMPLETED")
                 {

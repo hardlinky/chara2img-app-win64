@@ -8,7 +8,7 @@
         xmlns:views="clr-namespace:chara2img.Views"
         mc:Ignorable="d"
         Title="Chara2IMG - ComfyUI Runner" Height="700" Width="1000"
-        Background="{DynamicResource {x:Static SystemColors.WindowBrushKey}}">
+        Background="{DynamicResource WindowBackgroundBrush}">
     <Window.DataContext>
         <vm:MainViewModel/>
     </Window.DataContext>
@@ -24,7 +24,7 @@
     </Window.Resources>
 
     <Grid>
-        <TabControl Background="{DynamicResource {x:Static SystemColors.ControlBrushKey}}"
+        <TabControl Background="{DynamicResource ControlBackgroundBrush}"
                     SelectedIndex="{Binding SelectedTabIndex}">
             
             <!-- Workflow Tab -->

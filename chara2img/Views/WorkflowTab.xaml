@@ -5,7 +5,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
-    <Grid Margin="20" Background="{DynamicResource {x:Static SystemColors.WindowBrushKey}}">
+    <Grid Margin="20" Background="{DynamicResource WindowBackgroundBrush}">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
@@ -15,7 +15,7 @@
 
         <TextBlock Grid.Row="0" 
                    Text="Paste your ComfyUI workflow JSON or load from a file:"
-                   Foreground="{DynamicResource {x:Static SystemColors.WindowTextBrushKey}}"
+                   Foreground="{DynamicResource TextBrush}"
                    FontWeight="SemiBold"
                    Margin="0,0,0,10"/>
 
@@ -29,16 +29,16 @@
                     Padding="15,8"
                     Margin="0,0,10,0"/>
             <TextBlock Text="{Binding WorkflowFilePath}"
-                       Foreground="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}"
+                       Foreground="{DynamicResource SecondaryTextBrush}"
                        VerticalAlignment="Center"
                        FontStyle="Italic"
                        TextTrimming="CharacterEllipsis"/>
         </StackPanel>
 
         <Border Grid.Row="2" 
-                BorderBrush="{DynamicResource {x:Static SystemColors.ActiveBorderBrushKey}}" 
+                BorderBrush="{DynamicResource BorderBrush}" 
                 BorderThickness="1"
-                Background="{DynamicResource {x:Static SystemColors.WindowBrushKey}}">
+                Background="{DynamicResource CodeEditorBackgroundBrush}">
             <TextBox x:Name="WorkflowTextBox"
                      Text="{Binding WorkflowJson, UpdateSourceTrigger=PropertyChanged}"
                      AcceptsReturn="True"
@@ -48,12 +48,12 @@
                      FontFamily="Consolas"
                      FontSize="12"
                      Padding="5"
-                     Background="{DynamicResource {x:Static SystemColors.WindowBrushKey}}"
-                     Foreground="{DynamicResource {x:Static SystemColors.WindowTextBrushKey}}"/>
+                     Background="{DynamicResource CodeEditorBackgroundBrush}"
+                     Foreground="{DynamicResource TextBrush}"/>
         </Border>
 
         <StackPanel Grid.Row="3" Margin="0,10,0,0">
-            <TextBlock Foreground="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}"
+            <TextBlock Foreground="{DynamicResource SecondaryTextBrush}"
                        TextWrapping="Wrap">
                 <Run Text="💡 Tip: Export your ComfyUI workflow as JSON (API format) and paste it here, or save it as request.json and load it using the button above."/>
             </TextBlock>

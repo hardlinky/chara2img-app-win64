@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.ComponentModel;
 using System.Globalization;
 using System.Windows;
@@ -99,11 +100,25 @@ namespace chara2img
         }
     }
 
+    // Add this to your existing Converters file or MainWindow.xaml.cs
+
     public class ZeroToVisibilityConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            return value is int count && count == 0 ? Visibility.Visible : Visibility.Collapsed;
+            var count = 0;
+            if (value is int intValue)
+                count = intValue;
+            else if (value is ICollection collection)
+                count = collection.Count;
+
+            var isInverse = parameter?.ToString()?.ToLower() == "inverse";
+            var isZero = count == 0;
+
+            if (isInverse)
+                return isZero ? Visibility.Collapsed : Visibility.Visible;
+            else
+                return isZero ? Visibility.Visible : Visibility.Collapsed;
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)

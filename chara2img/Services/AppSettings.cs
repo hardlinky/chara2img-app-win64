@@ -18,7 +18,9 @@ namespace chara2img.Services
         public string OutputFolder { get; set; } = "";
         public string LastWorkflowPath { get; set; } = "";
         public List<RunpodJob>? RecentJobs { get; set; }
-        public bool SaveWorkflowWithJob { get; set; } = true; // NEW: Default to true
+        public bool SaveWorkflowWithJob { get; set; } = true;
+        public string Theme { get; set; } = "Light";
+        public int MaxPollingAttempts { get; set; } = 150; // Default: 150 attempts (5 minutes at 2s intervals)
 
         public static AppSettings Load()
         {

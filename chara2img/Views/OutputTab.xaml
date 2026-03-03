@@ -14,7 +14,7 @@
         <local:ZeroToVisibilityConverter x:Key="ZeroToVisibilityConverter"/>
     </UserControl.Resources>
     
-    <Grid Margin="20" Background="{DynamicResource {x:Static SystemColors.WindowBrushKey}}">
+    <Grid Margin="20" Background="{DynamicResource WindowBackgroundBrush}">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
@@ -22,12 +22,12 @@
 
         <TextBlock Grid.Row="0" 
                    Text="💡 Tip: Use mouse wheel to zoom, click and drag to pan, arrow keys to navigate" 
-                   Foreground="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}"
+                   Foreground="{DynamicResource SecondaryTextBrush}"
                    Margin="0,0,0,10"/>
 
         <!-- Gallery View -->
         <Grid Grid.Row="1" Visibility="{Binding IsGalleryView, Converter={StaticResource BoolToVisibilityConverter}}">
-            <ScrollViewer VerticalScrollBarVisibility="Auto">
+            <ScrollViewer VerticalScrollBarVisibility="Auto" Background="{DynamicResource WindowBackgroundBrush}">
                 <ItemsControl ItemsSource="{Binding CurrentImages}">
                     <ItemsControl.ItemsPanel>
                         <ItemsPanelTemplate>
@@ -41,7 +41,7 @@
                                     Margin="10"
                                     Padding="0"
                                     BorderThickness="2"
-                                    BorderBrush="{DynamicResource {x:Static SystemColors.ActiveBorderBrushKey}}"
+                                    BorderBrush="{DynamicResource BorderBrush}"
                                     Background="Transparent"
                                     Cursor="Hand">
                                 <Image Source="{Binding}" 
@@ -56,7 +56,7 @@
             <TextBlock Text="Generated images will appear here. Select a completed job from the Run tab to view its images." 
                         HorizontalAlignment="Center" 
                         VerticalAlignment="Center"
-                        Foreground="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}"
+                        Foreground="{DynamicResource SecondaryTextBrush}"
                         FontSize="16"
                         TextAlignment="Center"
                         Visibility="{Binding CurrentImages.Count, Converter={StaticResource ZeroToVisibilityConverter}}"/>
@@ -83,11 +83,13 @@
             </StackPanel>
 
             <Border Grid.Row="1" 
-                    BorderBrush="{DynamicResource {x:Static SystemColors.ActiveBorderBrushKey}}" 
-                    BorderThickness="1">
+                    BorderBrush="{DynamicResource BorderBrush}" 
+                    BorderThickness="1"
+                    Background="{DynamicResource ControlBackgroundBrush}">
                 <ScrollViewer x:Name="ImageScrollViewer"
                               HorizontalScrollBarVisibility="Auto" 
                               VerticalScrollBarVisibility="Auto"
+                              Background="{DynamicResource ControlBackgroundBrush}"
                               PreviewMouseWheel="ImageScrollViewer_PreviewMouseWheel"
                               SizeChanged="ImageScrollViewer_SizeChanged">
                     <Image x:Name="OutputImage"
@@ -109,7 +111,7 @@
 
             <TextBlock Grid.Row="1"
                        Text="💡 Use mouse wheel to zoom, click and drag to pan, arrow keys to navigate" 
-                       Foreground="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}"
+                       Foreground="{DynamicResource SecondaryTextBrush}"
                        HorizontalAlignment="Center"
                        VerticalAlignment="Bottom"
                        Margin="0,0,0,10"/>

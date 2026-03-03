@@ -13,12 +13,8 @@
             <local:ZeroToVisibilityConverter x:Key="ZeroToVisibilityConverter"/>
             
             <ResourceDictionary.MergedDictionaries>
-                <!-- Use system theme colors -->
-                <ResourceDictionary>
-                    <SolidColorBrush x:Key="WindowBackgroundBrush" Color="{DynamicResource {x:Static SystemColors.WindowColorKey}}"/>
-                    <SolidColorBrush x:Key="ControlBackgroundBrush" Color="{DynamicResource {x:Static SystemColors.ControlColorKey}}"/>
-                    <SolidColorBrush x:Key="TextBrush" Color="{DynamicResource {x:Static SystemColors.WindowTextColorKey}}"/>
-                </ResourceDictionary>
+                <!-- Default theme - will be replaced at runtime -->
+                <ResourceDictionary Source="Themes/LightTheme.xaml"/>
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </Application.Resources>

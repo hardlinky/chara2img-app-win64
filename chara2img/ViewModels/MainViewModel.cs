@@ -33,11 +33,16 @@ namespace chara2img.ViewModels
         private bool _isGalleryView = true;
         private double _imageZoom = 1.0;
         private const int MaxRecentJobs = 50; // Keep last 50 jobs
+        private string _selectedTheme = "Light";
+
+        private int _maxPollingAttempts = 150;
 
         public event PropertyChangedEventHandler? PropertyChanged;
 
         public ObservableCollection<RunpodJob> Jobs { get; } = new();
         public ObservableCollection<BitmapImage> CurrentImages { get; } = new();
+        public ObservableCollection<string> AvailableThemes { get; } = new() { "Light", "Dark" };
+        public ObservableCollection<string> ActiveJobStatuses { get; } = new();
 
         public string ApiKey
         {
@@ -179,6 +184,35 @@ namespace chara2img.ViewModels
             }
         }
 
+        public string SelectedTheme
+        {
+            get => _selectedTheme;
+            set
+            {
+                if (_selectedTheme != value)
+                {
+                    _selectedTheme = value;
+                    OnPropertyChanged();
+                    ApplyTheme(value);
+                    SaveSettings();
+                }
+            }
+        }
+
+        public int MaxPollingAttempts
+        {
+            get => _maxPollingAttempts;
+            set 
+            { 
+                if (_maxPollingAttempts != value && value > 0)
+                {
+                    _maxPollingAttempts = value;
+                    OnPropertyChanged();
+                    SaveSettings();
+                }
+            }
+        }
+
         public ICommand RunJobCommand { get; }
         public ICommand BrowseFolderCommand { get; }
         public ICommand LoadWorkflowCommand { get; }
@@ -256,7 +290,9 @@ namespace chara2img.ViewModels
             _settings = AppSettings.Load();
             _apiKey = _settings.ApiKey;
             _endpointId = _settings.EndpointId;
-            
+            _selectedTheme = _settings.Theme;
+            _maxPollingAttempts = _settings.MaxPollingAttempts;
+
             if (!string.IsNullOrEmpty(_settings.OutputFolder))
             {
                 _outputFolder = _settings.OutputFolder;
@@ -289,6 +325,9 @@ namespace chara2img.ViewModels
             // Create output folder if it doesn't exist
             Directory.CreateDirectory(_outputFolder);
 
+            // Apply saved theme
+            ApplyTheme(_selectedTheme);
+
             // Notify all properties to update UI with loaded values
             OnPropertyChanged(nameof(ApiKey));
             OnPropertyChanged(nameof(EndpointId));
@@ -298,6 +337,42 @@ namespace chara2img.ViewModels
             OnPropertyChanged(nameof(HasWorkflow));
             OnPropertyChanged(nameof(WorkflowInputs)); // Add this to ensure inputs are updated
             OnPropertyChanged(nameof(SaveWorkflowWithJob));
+            OnPropertyChanged(nameof(SelectedTheme));
+            OnPropertyChanged(nameof(MaxPollingAttempts));
+        }
+
+        private void ApplyTheme(string themeName)
+        {
+            var app = Application.Current;
+            if (app == null) return;
+
+            try
+            {
+                // Clear existing theme dictionaries
+                var themesToRemove = app.Resources.MergedDictionaries
+                    .Where(d => d.Source != null && 
+                           (d.Source.OriginalString.Contains("LightTheme") || 
+                            d.Source.OriginalString.Contains("DarkTheme")))
+                    .ToList();
+
+                foreach (var theme in themesToRemove)
+                {
+                    app.Resources.MergedDictionaries.Remove(theme);
+                }
+
+                // Add new theme at the start (higher priority)
+                var themeUri = new Uri($"Themes/{themeName}Theme.xaml", UriKind.Relative);
+                var newTheme = new ResourceDictionary { Source = themeUri };
+                app.Resources.MergedDictionaries.Insert(0, newTheme);
+
+                StatusMessage = $"Theme changed to {themeName}";
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Failed to apply theme: {ex.Message}");
+                MessageBox.Show($"Failed to apply theme: {ex.Message}\n\nMake sure theme files exist in Themes folder.", 
+                    "Theme Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
         }
 
         private RunpodService GetOrCreateService()
@@ -592,6 +667,8 @@ namespace chara2img.ViewModels
             _settings.OutputFolder = _outputFolder;
             _settings.LastWorkflowPath = _workflowFilePath;
             _settings.SaveWorkflowWithJob = _saveWorkflowWithJob;
+            _settings.Theme = _selectedTheme;
+            _settings.MaxPollingAttempts = _maxPollingAttempts;
             _settings.Save();
         }
 
@@ -749,9 +826,42 @@ namespace chara2img.ViewModels
 
                 StatusMessage = $"Job {jobId} submitted. Polling...";
 
-                var progress = new Progress<string>(msg => StatusMessage = msg);
+                var jobIdShort = jobId.Substring(0, 8);
+                var progress = new Progress<string>(msg => 
+                {
+                    Application.Current.Dispatcher.Invoke(() =>
+                    {
+                        // Update or add the status for this job
+                        var statusLine = $"[Job {jobIdShort}...] {msg}";
+                        
+                        // Find existing status for this job
+                        var existingIndex = -1;
+                        for (int i = 0; i < ActiveJobStatuses.Count; i++)
+                        {
+                            if (ActiveJobStatuses[i].StartsWith($"[Job {jobIdShort}...]"))
+                            {
+                                existingIndex = i;
+                                break;
+                            }
+                        }
+                        
+                        if (existingIndex >= 0)
+                        {
+                            ActiveJobStatuses[existingIndex] = statusLine;
+                        }
+                        else
+                        {
+                            ActiveJobStatuses.Add(statusLine);
+                        }
+                        
+                        // Also update the main status message
+                        StatusMessage = statusLine;
+                    });
+                });
+
                 var completedJob = await service.PollJobUntilCompleteAsync(
                     job, 
+                    maxAttempts: _maxPollingAttempts,
                     progress: progress,
                     onStatusUpdate: rawJson => 
                     {
@@ -769,6 +879,18 @@ namespace chara2img.ViewModels
 
                 if (completedJob != null)
                 {
+                    // Remove this job's status from active list
+                    Application.Current.Dispatcher.Invoke(() =>
+                    {
+                        for (int i = ActiveJobStatuses.Count - 1; i >= 0; i--)
+                        {
+                            if (ActiveJobStatuses[i].StartsWith($"[Job {jobIdShort}...]"))
+                            {
+                                ActiveJobStatuses.RemoveAt(i);
+                            }
+                        }
+                    });
+                    
                     // Force UI update for the job status in the ListView
                     Application.Current.Dispatcher.Invoke(() => OnPropertyChanged(nameof(Jobs)));
 

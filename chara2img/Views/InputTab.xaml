@@ -11,7 +11,7 @@
         <local:InverseBoolToVisibilityConverter x:Key="InverseBoolToVisibilityConverter"/>
     </UserControl.Resources>
     
-    <Grid Margin="20" Background="{DynamicResource {x:Static SystemColors.WindowBrushKey}}">
+    <Grid Margin="20" Background="{DynamicResource WindowBackgroundBrush}">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
@@ -19,24 +19,34 @@
 
         <!-- Run Button at the top -->
         <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,15">
-            <Button Content="▶ Run ComfyUI Job" 
-                    Command="{Binding RunJobCommand}"
+            <Button Command="{Binding RunJobCommand}"
                     Padding="20,10"
                     FontWeight="SemiBold"
-                    Margin="0,0,10,0"/>
-            <Border Background="{DynamicResource {x:Static SystemColors.InfoBrushKey}}"
+                    Margin="0,0,10,0">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="▶" 
+                               Foreground="#00C853"
+                               FontSize="14"
+                               Margin="0,0,5,0"
+                               VerticalAlignment="Center"/>
+                    <TextBlock Text="Run ComfyUI Job" 
+                               Foreground="{DynamicResource TextBrush}"
+                               VerticalAlignment="Center"/>
+                </StackPanel>
+            </Button>
+            <Border Background="{DynamicResource AccentBrush}"
                     Padding="10,5"
                     CornerRadius="3"
                     Visibility="{Binding HasWorkflow, Converter={StaticResource InverseBoolToVisibilityConverter}}">
                 <TextBlock Text="⚠ No workflow loaded"
-                           Foreground="{DynamicResource {x:Static SystemColors.InfoTextBrushKey}}"
+                           Foreground="{DynamicResource TextBrush}"
                            FontWeight="SemiBold"/>
             </Border>
         </StackPanel>
 
         <!-- Scrollable inputs section -->
         <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
-            <StackPanel Background="{DynamicResource {x:Static SystemColors.WindowBrushKey}}">
+            <StackPanel Background="{DynamicResource WindowBackgroundBrush}">
 
                 <!-- Config Section -->
                 <GroupBox Header="Config" Margin="0,0,0,15" Padding="10">
@@ -44,7 +54,7 @@
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
                                 <StackPanel Margin="0,0,0,10">
-                                    <TextBlock Text="{Binding DisplayName}" FontWeight="SemiBold" Margin="0,0,0,5" Foreground="{DynamicResource {x:Static SystemColors.WindowTextBrushKey}}"/>
+                                    <TextBlock Text="{Binding DisplayName}" FontWeight="SemiBold" Margin="0,0,0,5" Foreground="{DynamicResource TextBrush}"/>
 
                                     <!-- Single Line Text Input (for Scheduler, Sampler) -->
                                     <TextBox Text="{Binding Value, UpdateSourceTrigger=PropertyChanged}" 
@@ -67,7 +77,7 @@
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
                                 <StackPanel Margin="0,0,0,15">
-                                    <TextBlock Text="{Binding DisplayName}" FontWeight="SemiBold" Margin="0,0,0,5" Foreground="{DynamicResource {x:Static SystemColors.WindowTextBrushKey}}"/>
+                                    <TextBlock Text="{Binding DisplayName}" FontWeight="SemiBold" Margin="0,0,0,5" Foreground="{DynamicResource TextBrush}"/>
 
                                     <!-- Text Input -->
                                     <TextBox Text="{Binding Value, UpdateSourceTrigger=PropertyChanged}" 
@@ -87,7 +97,7 @@
                                                     </Grid.ColumnDefinitions>
 
                                                     <CheckBox Grid.Column="0" IsChecked="{Binding Enabled}" VerticalAlignment="Center" Margin="0,0,10,0"/>
-                                                    <TextBlock Grid.Column="1" Text="{Binding LoraName}" VerticalAlignment="Center" Foreground="{DynamicResource {x:Static SystemColors.WindowTextBrushKey}}"/>
+                                                    <TextBlock Grid.Column="1" Text="{Binding LoraName}" VerticalAlignment="Center" Foreground="{DynamicResource TextBrush}"/>
 
                                                     <StackPanel Grid.Column="2" Orientation="Horizontal">
                                                         <Slider Value="{Binding Strength}" Minimum="-2" Maximum="2" Width="80" VerticalAlignment="Center" 
@@ -110,7 +120,7 @@
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
                                 <StackPanel Margin="0,0,0,15">
-                                    <TextBlock Text="{Binding DisplayName}" FontWeight="SemiBold" Margin="0,0,0,5" Foreground="{DynamicResource {x:Static SystemColors.WindowTextBrushKey}}"/>
+                                    <TextBlock Text="{Binding DisplayName}" FontWeight="SemiBold" Margin="0,0,0,5" Foreground="{DynamicResource TextBrush}"/>
 
                                     <!-- Number Pair (Width x Height) -->
                                     <Grid Visibility="{Binding InputType, Converter={StaticResource InputTypeToVisibilityConverter}, ConverterParameter=number_pair}">
@@ -122,10 +132,10 @@
                                             <ColumnDefinition Width="100"/>
                                         </Grid.ColumnDefinitions>
 
-                                        <TextBlock Grid.Column="0" Text="{Binding Label1}" VerticalAlignment="Center" Margin="0,0,10,0" Foreground="{DynamicResource {x:Static SystemColors.WindowTextBrushKey}}"/>
+                                        <TextBlock Grid.Column="0" Text="{Binding Label1}" VerticalAlignment="Center" Margin="0,0,10,0" Foreground="{DynamicResource TextBrush}"/>
                                         <TextBox Grid.Column="1" Text="{Binding Value1, UpdateSourceTrigger=PropertyChanged}"/>
-                                        <TextBlock Grid.Column="2" Text="x" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="16" Foreground="{DynamicResource {x:Static SystemColors.WindowTextBrushKey}}"/>
-                                        <TextBlock Grid.Column="3" Text="{Binding Label2}" VerticalAlignment="Center" Margin="0,0,10,0" Foreground="{DynamicResource {x:Static SystemColors.WindowTextBrushKey}}"/>
+                                        <TextBlock Grid.Column="2" Text="x" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="16" Foreground="{DynamicResource TextBrush}"/>
+                                        <TextBlock Grid.Column="3" Text="{Binding Label2}" VerticalAlignment="Center" Margin="0,0,10,0" Foreground="{DynamicResource TextBrush}"/>
                                         <TextBox Grid.Column="4" Text="{Binding Value2, UpdateSourceTrigger=PropertyChanged}"/>
                                     </Grid>
                                 </StackPanel>
@@ -140,7 +150,7 @@
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
                                 <StackPanel Margin="0,0,0,10">
-                                    <TextBlock Text="{Binding DisplayName}" FontWeight="SemiBold" Margin="0,0,0,5" Foreground="{DynamicResource {x:Static SystemColors.WindowTextBrushKey}}"/>
+                                    <TextBlock Text="{Binding DisplayName}" FontWeight="SemiBold" Margin="0,0,0,5" Foreground="{DynamicResource TextBrush}"/>
 
                                     <!-- Single Line Text Input -->
                                     <TextBox Text="{Binding Value, UpdateSourceTrigger=PropertyChanged}" 
@@ -169,7 +179,7 @@
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
                                 <StackPanel Margin="0,0,0,10">
-                                    <TextBlock Text="{Binding DisplayName}" FontWeight="SemiBold" Margin="0,0,0,5" Foreground="{DynamicResource {x:Static SystemColors.WindowTextBrushKey}}"/>
+                                    <TextBlock Text="{Binding DisplayName}" FontWeight="SemiBold" Margin="0,0,0,5" Foreground="{DynamicResource TextBrush}"/>
 
                                     <!-- Single Line Text Input (for Costume - Name) -->
                                     <TextBox Text="{Binding Value, UpdateSourceTrigger=PropertyChanged}" 
@@ -198,7 +208,7 @@
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
                                 <StackPanel Margin="0,0,0,10">
-                                    <TextBlock Text="{Binding DisplayName}" FontWeight="SemiBold" Margin="0,0,0,5" Foreground="{DynamicResource {x:Static SystemColors.WindowTextBrushKey}}"/>
+                                    <TextBlock Text="{Binding DisplayName}" FontWeight="SemiBold" Margin="0,0,0,5" Foreground="{DynamicResource TextBrush}"/>
 
                                     <!-- Multiline Text Input (2 lines tall) -->
                                     <TextBox Text="{Binding Value, UpdateSourceTrigger=PropertyChanged}" 
@@ -222,7 +232,7 @@
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
                                 <StackPanel Margin="0,0,0,15">
-                                    <TextBlock Text="{Binding DisplayName}" FontWeight="SemiBold" Margin="0,0,0,5" Foreground="{DynamicResource {x:Static SystemColors.WindowTextBrushKey}}"/>
+                                    <TextBlock Text="{Binding DisplayName}" FontWeight="SemiBold" Margin="0,0,0,5" Foreground="{DynamicResource TextBrush}"/>
 
                                     <!-- Multiline Text -->
                                     <TextBox Text="{Binding Value, UpdateSourceTrigger=PropertyChanged}" 
@@ -246,7 +256,7 @@
                     <ItemsControl ItemsSource="{Binding WorkflowInputs[Detailer]}">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
-                                <TextBlock Text="{Binding DisplayName}" Margin="0,5" Foreground="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}" FontStyle="Italic"/>
+                                <TextBlock Text="{Binding DisplayName}" Margin="0,5" Foreground="{DynamicResource SecondaryTextBrush}" FontStyle="Italic"/>
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>

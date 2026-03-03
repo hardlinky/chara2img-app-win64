@@ -5,22 +5,57 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
-    <Grid Margin="20" Background="{DynamicResource {x:Static SystemColors.WindowBrushKey}}">
+    <Grid Margin="20" Background="{DynamicResource WindowBackgroundBrush}">
         <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <StackPanel Grid.Row="0">
-            <Label Content="Runpod API Key:" Foreground="{DynamicResource {x:Static SystemColors.WindowTextBrushKey}}"/>
+        <!-- Appearance Section -->
+        <StackPanel Grid.Row="0" Margin="0,0,0,20">
+            <Label Content="Appearance:" 
+                   Foreground="{DynamicResource TextBrush}"
+                   FontWeight="SemiBold"
+                   FontSize="14"/>
+            <Grid Margin="5,5,0,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="200"/>
+                </Grid.ColumnDefinitions>
+                <Label Grid.Column="0" Content="Theme:" Foreground="{DynamicResource TextBrush}" VerticalAlignment="Center"/>
+                <ComboBox Grid.Column="1" 
+                          ItemsSource="{Binding AvailableThemes}"
+                          SelectedItem="{Binding SelectedTheme}"
+                          Margin="10,0,0,0"
+                          Padding="5"
+                          ToolTip="Switch between light and dark theme"/>
+            </Grid>
+        </StackPanel>
+
+        <!-- API Settings Section -->
+        <StackPanel Grid.Row="1">
+            <Label Content="Runpod API Settings:" 
+                   Foreground="{DynamicResource TextBrush}"
+                   FontWeight="SemiBold"
+                   FontSize="14"/>
+            <Label Content="API Key:" Foreground="{DynamicResource TextBrush}" Margin="0,5,0,0"/>
             <TextBox Text="{Binding ApiKey, UpdateSourceTrigger=PropertyChanged}" Margin="0,5,0,15"/>
 
-            <Label Content="Endpoint ID:" Foreground="{DynamicResource {x:Static SystemColors.WindowTextBrushKey}}"/>
+            <Label Content="Endpoint ID:" Foreground="{DynamicResource TextBrush}"/>
             <TextBox Text="{Binding EndpointId, UpdateSourceTrigger=PropertyChanged}" Margin="0,5,0,15"/>
+        </StackPanel>
 
-            <Label Content="Output Folder:" Foreground="{DynamicResource {x:Static SystemColors.WindowTextBrushKey}}"/>
+        <!-- Output Settings Section -->
+        <StackPanel Grid.Row="2" Margin="0,10,0,0">
+            <Label Content="Output Settings:" 
+                   Foreground="{DynamicResource TextBrush}"
+                   FontWeight="SemiBold"
+                   FontSize="14"/>
+            <Label Content="Output Folder:" Foreground="{DynamicResource TextBrush}" Margin="0,5,0,0"/>
             <Grid Margin="0,5,0,15">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
@@ -33,20 +68,53 @@
             </Grid>
         </StackPanel>
 
-        <StackPanel Grid.Row="1" Margin="0,0,0,15">
+        <!-- Job Execution Settings Section -->
+        <StackPanel Grid.Row="3" Margin="0,0,0,15">
+            <Label Content="Job Execution Settings:" 
+                   Foreground="{DynamicResource TextBrush}"
+                   FontWeight="SemiBold"
+                   FontSize="14"/>
+            
+            <Grid Margin="5,5,0,10">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="100"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <Label Grid.Column="0" 
+                       Content="Max Polling Attempts:" 
+                       Foreground="{DynamicResource TextBrush}" 
+                       VerticalAlignment="Center"/>
+                <TextBox Grid.Column="1" 
+                         Text="{Binding MaxPollingAttempts, UpdateSourceTrigger=PropertyChanged}" 
+                         Margin="10,0,10,0"
+                         Padding="5"
+                         VerticalAlignment="Center"/>
+                <TextBlock Grid.Column="2" 
+                           VerticalAlignment="Center"
+                           Foreground="{DynamicResource SecondaryTextBrush}"
+                           Text="(2 second intervals, default: 150 = ~5 minutes timeout)"
+                           ToolTip="Each attempt polls the server every 2 seconds. 150 attempts = 5 minutes total."/>
+            </Grid>
+        </StackPanel>
+
+        <!-- Workflow Options Section -->
+        <StackPanel Grid.Row="4" Margin="0,0,0,15">
             <Label Content="Workflow Options:" 
-                   Foreground="{DynamicResource {x:Static SystemColors.WindowTextBrushKey}}"
-                   FontWeight="SemiBold"/>
+                   Foreground="{DynamicResource TextBrush}"
+                   FontWeight="SemiBold"
+                   FontSize="14"/>
             <CheckBox Content="Save workflow JSON file with each job" 
                       IsChecked="{Binding SaveWorkflowWithJob}"
+                      Foreground="{DynamicResource TextBrush}"
                       Margin="5,5,0,5"
                       ToolTip="When enabled, saves the workflow JSON file to the output folder when running a job, making it easy to reload the workflow later"/>
         </StackPanel>
 
-        <TextBlock Grid.Row="3" 
+        <TextBlock Grid.Row="5" 
                    Text="Configure your Runpod serverless ComfyUI endpoint credentials above." 
                    VerticalAlignment="Bottom" 
-                   Foreground="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}"
+                   Foreground="{DynamicResource SecondaryTextBrush}"
                    TextWrapping="Wrap"/>
     </Grid>
 </UserControl>
