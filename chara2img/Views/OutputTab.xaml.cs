@@ -45,20 +45,16 @@ namespace chara2img.Views
             switch (e.Key)
             {
                 case Key.Left:
-                    // Go to previous image
-                    if (currentIndex > 0)
-                    {
-                        viewModel.ShowImageCommand.Execute(currentImages[currentIndex - 1]);
-                    }
+                    // Go to previous image (loop to last if at first)
+                    var prevIndex = currentIndex == 0 ? currentImages.Count - 1 : currentIndex - 1;
+                    viewModel.ShowImageCommand.Execute(currentImages[prevIndex]);
                     e.Handled = true;
                     break;
 
                 case Key.Right:
-                    // Go to next image
-                    if (currentIndex < currentImages.Count - 1)
-                    {
-                        viewModel.ShowImageCommand.Execute(currentImages[currentIndex + 1]);
-                    }
+                    // Go to next image (loop to first if at last)
+                    var nextIndex = currentIndex == currentImages.Count - 1 ? 0 : currentIndex + 1;
+                    viewModel.ShowImageCommand.Execute(currentImages[nextIndex]);
                     e.Handled = true;
                     break;
 
