@@ -966,14 +966,18 @@ namespace chara2img.ViewModels
         // NEW: Navigation methods
         private bool CanNavigateToPreviousJob()
         {
-            // Can always navigate if there are jobs (will loop)
-            return Jobs.Count > 0 && SelectedJob != null;
+            if (Jobs.Count == 0 || SelectedJob == null) return false;
+            
+            // Check if there's at least one other completed job
+            return Jobs.Any(j => j.Status == "completed" && j != SelectedJob);
         }
 
         private bool CanNavigateToNextJob()
         {
-            // Can always navigate if there are jobs (will loop)
-            return Jobs.Count > 0 && SelectedJob != null;
+            if (Jobs.Count == 0 || SelectedJob == null) return false;
+            
+            // Check if there's at least one other completed job
+            return Jobs.Any(j => j.Status == "completed" && j != SelectedJob);
         }
 
         private void NavigateToPreviousJob()
@@ -981,19 +985,34 @@ namespace chara2img.ViewModels
             if (!CanNavigateToPreviousJob()) return;
             
             var currentIndex = Jobs.IndexOf(SelectedJob!);
-            // Loop to last job if at first (top of list)
-            var previousIndex = currentIndex == 0 ? Jobs.Count - 1 : currentIndex - 1;
-            var previousJob = Jobs[previousIndex];
             var wasInPreviewMode = !IsGalleryView;
             
-            SelectedJob = previousJob;
+            // Find the previous completed job (going up in the list)
+            int previousIndex = currentIndex - 1;
+            if (previousIndex < 0) previousIndex = Jobs.Count - 1; // Start from bottom
             
-            // If we were in preview mode, open the first image of the new job
-            if (wasInPreviewMode && CurrentImages.Count > 0)
+            // Search for the previous completed job, wrapping around if needed
+            int searchCount = 0;
+            while (searchCount < Jobs.Count)
             {
-                ShowImage(CurrentImages[0]);
-                // Notify to trigger re-evaluation
-                OnPropertyChanged(nameof(ImageZoom));
+                if (Jobs[previousIndex].Status == "completed")
+                {
+                    var previousJob = Jobs[previousIndex];
+                    SelectedJob = previousJob;
+                    
+                    // If we were in preview mode, open the first image of the new job
+                    if (wasInPreviewMode && CurrentImages.Count > 0)
+                    {
+                        ShowImage(CurrentImages[0]);
+                        // Notify to trigger re-evaluation
+                        OnPropertyChanged(nameof(ImageZoom));
+                    }
+                    return;
+                }
+                
+                previousIndex--;
+                if (previousIndex < 0) previousIndex = Jobs.Count - 1;
+                searchCount++;
             }
         }
 
@@ -1002,19 +1021,34 @@ namespace chara2img.ViewModels
             if (!CanNavigateToNextJob()) return;
             
             var currentIndex = Jobs.IndexOf(SelectedJob!);
-            // Loop to first job if at last (bottom of list)
-            var nextIndex = currentIndex == Jobs.Count - 1 ? 0 : currentIndex + 1;
-            var nextJob = Jobs[nextIndex];
             var wasInPreviewMode = !IsGalleryView;
             
-            SelectedJob = nextJob;
+            // Find the next completed job (going down in the list)
+            int nextIndex = currentIndex + 1;
+            if (nextIndex >= Jobs.Count) nextIndex = 0; // Start from top
             
-            // If we were in preview mode, open the first image of the new job
-            if (wasInPreviewMode && CurrentImages.Count > 0)
+            // Search for the next completed job, wrapping around if needed
+            int searchCount = 0;
+            while (searchCount < Jobs.Count)
             {
-                ShowImage(CurrentImages[0]);
-                // Notify to trigger re-evaluation
-                OnPropertyChanged(nameof(ImageZoom));
+                if (Jobs[nextIndex].Status == "completed")
+                {
+                    var nextJob = Jobs[nextIndex];
+                    SelectedJob = nextJob;
+                    
+                    // If we were in preview mode, open the first image of the new job
+                    if (wasInPreviewMode && CurrentImages.Count > 0)
+                    {
+                        ShowImage(CurrentImages[0]);
+                        // Notify to trigger re-evaluation
+                        OnPropertyChanged(nameof(ImageZoom));
+                    }
+                    return;
+                }
+                
+                nextIndex++;
+                if (nextIndex >= Jobs.Count) nextIndex = 0;
+                searchCount++;
             }
         }
 
