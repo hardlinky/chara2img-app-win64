@@ -8,225 +8,251 @@
              d:DesignHeight="450" d:DesignWidth="800">
     <UserControl.Resources>
         <local:InputTypeToVisibilityConverter x:Key="InputTypeToVisibilityConverter"/>
+        <local:InverseBoolToVisibilityConverter x:Key="InverseBoolToVisibilityConverter"/>
     </UserControl.Resources>
     
-    <ScrollViewer VerticalScrollBarVisibility="Auto">
-        <StackPanel Margin="20" Background="{DynamicResource {x:Static SystemColors.WindowBrushKey}}">
+    <Grid Margin="20" Background="{DynamicResource {x:Static SystemColors.WindowBrushKey}}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
 
-            <!-- Config Section -->
-            <GroupBox Header="Config" Margin="0,0,0,15" Padding="10">
-                <ItemsControl ItemsSource="{Binding WorkflowInputs[Config]}">
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate>
-                            <StackPanel Margin="0,0,0,10">
-                                <TextBlock Text="{Binding DisplayName}" FontWeight="SemiBold" Margin="0,0,0,5" Foreground="{DynamicResource {x:Static SystemColors.WindowTextBrushKey}}"/>
-
-                                <!-- Single Line Text Input (for Scheduler, Sampler) -->
-                                <TextBox Text="{Binding Value, UpdateSourceTrigger=PropertyChanged}" 
-                                         Padding="5"
-                                         Visibility="{Binding InputType, Converter={StaticResource InputTypeToVisibilityConverter}, ConverterParameter=text}"/>
-
-                                <!-- Number Input (for STEPS, CFG, Denoise, Batch Size) -->
-                                <TextBox Text="{Binding Value, UpdateSourceTrigger=PropertyChanged}" 
-                                         Padding="5"
-                                         Visibility="{Binding InputType, Converter={StaticResource InputTypeToVisibilityConverter}, ConverterParameter=number}"/>
-                            </StackPanel>
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
-            </GroupBox>
-
-            <!-- Model Section -->
-            <GroupBox Header="Model" Margin="0,0,0,15" Padding="10">
-                <ItemsControl ItemsSource="{Binding WorkflowInputs[Model]}">
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate>
-                            <StackPanel Margin="0,0,0,15">
-                                <TextBlock Text="{Binding DisplayName}" FontWeight="SemiBold" Margin="0,0,0,5" Foreground="{DynamicResource {x:Static SystemColors.WindowTextBrushKey}}"/>
-
-                                <!-- Text Input -->
-                                <TextBox Text="{Binding Value, UpdateSourceTrigger=PropertyChanged}" 
-                                         Padding="5"
-                                         Visibility="{Binding InputType, Converter={StaticResource InputTypeToVisibilityConverter}, ConverterParameter=text}"/>
-
-                                <!-- Lora List -->
-                                <ItemsControl ItemsSource="{Binding Loras}"
-                                              Visibility="{Binding InputType, Converter={StaticResource InputTypeToVisibilityConverter}, ConverterParameter=lora_list}">
-                                    <ItemsControl.ItemTemplate>
-                                        <DataTemplate>
-                                            <Grid Margin="0,5">
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="Auto"/>
-                                                    <ColumnDefinition Width="*"/>
-                                                    <ColumnDefinition Width="150"/>
-                                                </Grid.ColumnDefinitions>
-
-                                                <CheckBox Grid.Column="0" IsChecked="{Binding Enabled}" VerticalAlignment="Center" Margin="0,0,10,0"/>
-                                                <TextBlock Grid.Column="1" Text="{Binding LoraName}" VerticalAlignment="Center" Foreground="{DynamicResource {x:Static SystemColors.WindowTextBrushKey}}"/>
-
-                                                <StackPanel Grid.Column="2" Orientation="Horizontal">
-                                                    <Slider Value="{Binding Strength}" Minimum="-2" Maximum="2" Width="80" VerticalAlignment="Center" 
-                                                            TickFrequency="0.1" IsSnapToTickEnabled="True"/>
-                                                    <TextBox Text="{Binding Strength, StringFormat=F2}" Width="50" Margin="5,0,0,0" VerticalAlignment="Center"/>
-                                                </StackPanel>
-                                            </Grid>
-                                        </DataTemplate>
-                                    </ItemsControl.ItemTemplate>
-                                </ItemsControl>
-                            </StackPanel>
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
-            </GroupBox>
-
-            <!-- Image Section -->
-            <GroupBox Header="Image" Margin="0,0,0,15" Padding="10">
-                <ItemsControl ItemsSource="{Binding WorkflowInputs[Image]}">
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate>
-                            <StackPanel Margin="0,0,0,15">
-                                <TextBlock Text="{Binding DisplayName}" FontWeight="SemiBold" Margin="0,0,0,5" Foreground="{DynamicResource {x:Static SystemColors.WindowTextBrushKey}}"/>
-
-                                <!-- Number Pair (Width x Height) -->
-                                <Grid Visibility="{Binding InputType, Converter={StaticResource InputTypeToVisibilityConverter}, ConverterParameter=number_pair}">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto"/>
-                                        <ColumnDefinition Width="100"/>
-                                        <ColumnDefinition Width="20"/>
-                                        <ColumnDefinition Width="Auto"/>
-                                        <ColumnDefinition Width="100"/>
-                                    </Grid.ColumnDefinitions>
-
-                                    <TextBlock Grid.Column="0" Text="{Binding Label1}" VerticalAlignment="Center" Margin="0,0,10,0" Foreground="{DynamicResource {x:Static SystemColors.WindowTextBrushKey}}"/>
-                                    <TextBox Grid.Column="1" Text="{Binding Value1, UpdateSourceTrigger=PropertyChanged}"/>
-                                    <TextBlock Grid.Column="2" Text="x" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="16" Foreground="{DynamicResource {x:Static SystemColors.WindowTextBrushKey}}"/>
-                                    <TextBlock Grid.Column="3" Text="{Binding Label2}" VerticalAlignment="Center" Margin="0,0,10,0" Foreground="{DynamicResource {x:Static SystemColors.WindowTextBrushKey}}"/>
-                                    <TextBox Grid.Column="4" Text="{Binding Value2, UpdateSourceTrigger=PropertyChanged}"/>
-                                </Grid>
-                            </StackPanel>
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
-            </GroupBox>
-
-            <!-- Character Section -->
-            <GroupBox Header="Character" Margin="0,0,0,15" Padding="10">
-                <ItemsControl ItemsSource="{Binding WorkflowInputs[Character]}">
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate>
-                            <StackPanel Margin="0,0,0,10">
-                                <TextBlock Text="{Binding DisplayName}" FontWeight="SemiBold" Margin="0,0,0,5" Foreground="{DynamicResource {x:Static SystemColors.WindowTextBrushKey}}"/>
-
-                                <!-- Single Line Text Input -->
-                                <TextBox Text="{Binding Value, UpdateSourceTrigger=PropertyChanged}" 
-                                         Padding="5"
-                                         Visibility="{Binding InputType, Converter={StaticResource InputTypeToVisibilityConverter}, ConverterParameter=text}"/>
-
-                                <!-- Multiline Text Input (2 lines tall) -->
-                                <TextBox Text="{Binding Value, UpdateSourceTrigger=PropertyChanged}" 
-                                         TextWrapping="Wrap"
-                                         AcceptsReturn="True"
-                                         Height="40"
-                                         VerticalScrollBarVisibility="Auto"
-                                         Padding="5"
-                                         FontFamily="Consolas"
-                                         FontSize="11"
-                                         Visibility="{Binding InputType, Converter={StaticResource InputTypeToVisibilityConverter}, ConverterParameter=multiline}"/>
-                            </StackPanel>
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
-            </GroupBox>
-
-            <!-- Costume Section -->
-            <GroupBox Header="Costume" Margin="0,0,0,15" Padding="10">
-                <ItemsControl ItemsSource="{Binding WorkflowInputs[Costume]}">
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate>
-                            <StackPanel Margin="0,0,0,10">
-                                <TextBlock Text="{Binding DisplayName}" FontWeight="SemiBold" Margin="0,0,0,5" Foreground="{DynamicResource {x:Static SystemColors.WindowTextBrushKey}}"/>
-
-                                <!-- Single Line Text Input (for Costume - Name) -->
-                                <TextBox Text="{Binding Value, UpdateSourceTrigger=PropertyChanged}" 
-                                         Padding="5"
-                                         Visibility="{Binding InputType, Converter={StaticResource InputTypeToVisibilityConverter}, ConverterParameter=text}"/>
-
-                                <!-- Multiline Text Input (2 lines tall for Face, Head, Top, Bottom, Shoes, Negative) -->
-                                <TextBox Text="{Binding Value, UpdateSourceTrigger=PropertyChanged}" 
-                                         TextWrapping="Wrap"
-                                         AcceptsReturn="True"
-                                         Height="40"
-                                         VerticalScrollBarVisibility="Auto"
-                                         Padding="5"
-                                         FontFamily="Consolas"
-                                         FontSize="11"
-                                         Visibility="{Binding InputType, Converter={StaticResource InputTypeToVisibilityConverter}, ConverterParameter=multiline}"/>
-                            </StackPanel>
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
-            </GroupBox>
-
-            <!-- Pose Section -->
-            <GroupBox Header="Pose" Margin="0,0,0,15" Padding="10">
-                <ItemsControl ItemsSource="{Binding WorkflowInputs[Pose]}">
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate>
-                            <StackPanel Margin="0,0,0,10">
-                                <TextBlock Text="{Binding DisplayName}" FontWeight="SemiBold" Margin="0,0,0,5" Foreground="{DynamicResource {x:Static SystemColors.WindowTextBrushKey}}"/>
-
-                                <!-- Multiline Text Input (2 lines tall) -->
-                                <TextBox Text="{Binding Value, UpdateSourceTrigger=PropertyChanged}" 
-                                         TextWrapping="Wrap"
-                                         AcceptsReturn="True"
-                                         Height="40"
-                                         VerticalScrollBarVisibility="Auto"
-                                         Padding="5"
-                                         FontFamily="Consolas"
-                                         FontSize="11"
-                                         Visibility="{Binding InputType, Converter={StaticResource InputTypeToVisibilityConverter}, ConverterParameter=multiline}"/>
-                            </StackPanel>
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
-            </GroupBox>
-
-            <!-- Prompt Section -->
-            <GroupBox Header="Prompt" Margin="0,0,0,15" Padding="10">
-                <ItemsControl ItemsSource="{Binding WorkflowInputs[Prompt]}">
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate>
-                            <StackPanel Margin="0,0,0,15">
-                                <TextBlock Text="{Binding DisplayName}" FontWeight="SemiBold" Margin="0,0,0,5" Foreground="{DynamicResource {x:Static SystemColors.WindowTextBrushKey}}"/>
-
-                                <!-- Multiline Text -->
-                                <TextBox Text="{Binding Value, UpdateSourceTrigger=PropertyChanged}" 
-                                         TextWrapping="Wrap"
-                                         AcceptsReturn="True"
-                                         MinHeight="100"
-                                         MaxHeight="200"
-                                         VerticalScrollBarVisibility="Auto"
-                                         Padding="5"
-                                         FontFamily="Consolas"
-                                         FontSize="11"
-                                         Visibility="{Binding InputType, Converter={StaticResource InputTypeToVisibilityConverter}, ConverterParameter=multiline}"/>
-                            </StackPanel>
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
-            </GroupBox>
-
-            <!-- Detailer Section -->
-            <GroupBox Header="Detailer" Margin="0,0,0,15" Padding="10">
-                <ItemsControl ItemsSource="{Binding WorkflowInputs[Detailer]}">
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate>
-                            <TextBlock Text="{Binding DisplayName}" Margin="0,5" Foreground="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}" FontStyle="Italic"/>
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
-            </GroupBox>
-
+        <!-- Run Button at the top -->
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,15">
+            <Button Content="▶ Run ComfyUI Job" 
+                    Command="{Binding RunJobCommand}"
+                    Padding="20,10"
+                    FontWeight="SemiBold"
+                    Margin="0,0,10,0"/>
+            <Border Background="{DynamicResource {x:Static SystemColors.InfoBrushKey}}"
+                    Padding="10,5"
+                    CornerRadius="3"
+                    Visibility="{Binding HasWorkflow, Converter={StaticResource InverseBoolToVisibilityConverter}}">
+                <TextBlock Text="⚠ No workflow loaded"
+                           Foreground="{DynamicResource {x:Static SystemColors.InfoTextBrushKey}}"
+                           FontWeight="SemiBold"/>
+            </Border>
         </StackPanel>
-    </ScrollViewer>
+
+        <!-- Scrollable inputs section -->
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+            <StackPanel Background="{DynamicResource {x:Static SystemColors.WindowBrushKey}}">
+
+                <!-- Config Section -->
+                <GroupBox Header="Config" Margin="0,0,0,15" Padding="10">
+                    <ItemsControl ItemsSource="{Binding WorkflowInputs[Config]}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel Margin="0,0,0,10">
+                                    <TextBlock Text="{Binding DisplayName}" FontWeight="SemiBold" Margin="0,0,0,5" Foreground="{DynamicResource {x:Static SystemColors.WindowTextBrushKey}}"/>
+
+                                    <!-- Single Line Text Input (for Scheduler, Sampler) -->
+                                    <TextBox Text="{Binding Value, UpdateSourceTrigger=PropertyChanged}" 
+                                             Padding="5"
+                                             Visibility="{Binding InputType, Converter={StaticResource InputTypeToVisibilityConverter}, ConverterParameter=text}"/>
+
+                                    <!-- Number Input (for STEPS, CFG, Denoise, Batch Size) -->
+                                    <TextBox Text="{Binding Value, UpdateSourceTrigger=PropertyChanged}" 
+                                             Padding="5"
+                                             Visibility="{Binding InputType, Converter={StaticResource InputTypeToVisibilityConverter}, ConverterParameter=number}"/>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </GroupBox>
+
+                <!-- Model Section -->
+                <GroupBox Header="Model" Margin="0,0,0,15" Padding="10">
+                    <ItemsControl ItemsSource="{Binding WorkflowInputs[Model]}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel Margin="0,0,0,15">
+                                    <TextBlock Text="{Binding DisplayName}" FontWeight="SemiBold" Margin="0,0,0,5" Foreground="{DynamicResource {x:Static SystemColors.WindowTextBrushKey}}"/>
+
+                                    <!-- Text Input -->
+                                    <TextBox Text="{Binding Value, UpdateSourceTrigger=PropertyChanged}" 
+                                             Padding="5"
+                                             Visibility="{Binding InputType, Converter={StaticResource InputTypeToVisibilityConverter}, ConverterParameter=text}"/>
+
+                                    <!-- Lora List -->
+                                    <ItemsControl ItemsSource="{Binding Loras}"
+                                                  Visibility="{Binding InputType, Converter={StaticResource InputTypeToVisibilityConverter}, ConverterParameter=lora_list}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <Grid Margin="0,5">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="150"/>
+                                                    </Grid.ColumnDefinitions>
+
+                                                    <CheckBox Grid.Column="0" IsChecked="{Binding Enabled}" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                                                    <TextBlock Grid.Column="1" Text="{Binding LoraName}" VerticalAlignment="Center" Foreground="{DynamicResource {x:Static SystemColors.WindowTextBrushKey}}"/>
+
+                                                    <StackPanel Grid.Column="2" Orientation="Horizontal">
+                                                        <Slider Value="{Binding Strength}" Minimum="-2" Maximum="2" Width="80" VerticalAlignment="Center" 
+                                                                TickFrequency="0.1" IsSnapToTickEnabled="True"/>
+                                                        <TextBox Text="{Binding Strength, StringFormat=F2}" Width="50" Margin="5,0,0,0" VerticalAlignment="Center"/>
+                                                    </StackPanel>
+                                                </Grid>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </GroupBox>
+
+                <!-- Image Section -->
+                <GroupBox Header="Image" Margin="0,0,0,15" Padding="10">
+                    <ItemsControl ItemsSource="{Binding WorkflowInputs[Image]}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel Margin="0,0,0,15">
+                                    <TextBlock Text="{Binding DisplayName}" FontWeight="SemiBold" Margin="0,0,0,5" Foreground="{DynamicResource {x:Static SystemColors.WindowTextBrushKey}}"/>
+
+                                    <!-- Number Pair (Width x Height) -->
+                                    <Grid Visibility="{Binding InputType, Converter={StaticResource InputTypeToVisibilityConverter}, ConverterParameter=number_pair}">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="100"/>
+                                            <ColumnDefinition Width="20"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="100"/>
+                                        </Grid.ColumnDefinitions>
+
+                                        <TextBlock Grid.Column="0" Text="{Binding Label1}" VerticalAlignment="Center" Margin="0,0,10,0" Foreground="{DynamicResource {x:Static SystemColors.WindowTextBrushKey}}"/>
+                                        <TextBox Grid.Column="1" Text="{Binding Value1, UpdateSourceTrigger=PropertyChanged}"/>
+                                        <TextBlock Grid.Column="2" Text="x" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="16" Foreground="{DynamicResource {x:Static SystemColors.WindowTextBrushKey}}"/>
+                                        <TextBlock Grid.Column="3" Text="{Binding Label2}" VerticalAlignment="Center" Margin="0,0,10,0" Foreground="{DynamicResource {x:Static SystemColors.WindowTextBrushKey}}"/>
+                                        <TextBox Grid.Column="4" Text="{Binding Value2, UpdateSourceTrigger=PropertyChanged}"/>
+                                    </Grid>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </GroupBox>
+
+                <!-- Character Section -->
+                <GroupBox Header="Character" Margin="0,0,0,15" Padding="10">
+                    <ItemsControl ItemsSource="{Binding WorkflowInputs[Character]}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel Margin="0,0,0,10">
+                                    <TextBlock Text="{Binding DisplayName}" FontWeight="SemiBold" Margin="0,0,0,5" Foreground="{DynamicResource {x:Static SystemColors.WindowTextBrushKey}}"/>
+
+                                    <!-- Single Line Text Input -->
+                                    <TextBox Text="{Binding Value, UpdateSourceTrigger=PropertyChanged}" 
+                                             Padding="5"
+                                             Visibility="{Binding InputType, Converter={StaticResource InputTypeToVisibilityConverter}, ConverterParameter=text}"/>
+
+                                    <!-- Multiline Text Input (2 lines tall) -->
+                                    <TextBox Text="{Binding Value, UpdateSourceTrigger=PropertyChanged}" 
+                                             TextWrapping="Wrap"
+                                             AcceptsReturn="True"
+                                             Height="40"
+                                             VerticalScrollBarVisibility="Auto"
+                                             Padding="5"
+                                             FontFamily="Consolas"
+                                             FontSize="11"
+                                             Visibility="{Binding InputType, Converter={StaticResource InputTypeToVisibilityConverter}, ConverterParameter=multiline}"/>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </GroupBox>
+
+                <!-- Costume Section -->
+                <GroupBox Header="Costume" Margin="0,0,0,15" Padding="10">
+                    <ItemsControl ItemsSource="{Binding WorkflowInputs[Costume]}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel Margin="0,0,0,10">
+                                    <TextBlock Text="{Binding DisplayName}" FontWeight="SemiBold" Margin="0,0,0,5" Foreground="{DynamicResource {x:Static SystemColors.WindowTextBrushKey}}"/>
+
+                                    <!-- Single Line Text Input (for Costume - Name) -->
+                                    <TextBox Text="{Binding Value, UpdateSourceTrigger=PropertyChanged}" 
+                                             Padding="5"
+                                             Visibility="{Binding InputType, Converter={StaticResource InputTypeToVisibilityConverter}, ConverterParameter=text}"/>
+
+                                    <!-- Multiline Text Input (2 lines tall for Face, Head, Top, Bottom, Shoes, Negative) -->
+                                    <TextBox Text="{Binding Value, UpdateSourceTrigger=PropertyChanged}" 
+                                             TextWrapping="Wrap"
+                                             AcceptsReturn="True"
+                                             Height="40"
+                                             VerticalScrollBarVisibility="Auto"
+                                             Padding="5"
+                                             FontFamily="Consolas"
+                                             FontSize="11"
+                                             Visibility="{Binding InputType, Converter={StaticResource InputTypeToVisibilityConverter}, ConverterParameter=multiline}"/>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </GroupBox>
+
+                <!-- Pose Section -->
+                <GroupBox Header="Pose" Margin="0,0,0,15" Padding="10">
+                    <ItemsControl ItemsSource="{Binding WorkflowInputs[Pose]}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel Margin="0,0,0,10">
+                                    <TextBlock Text="{Binding DisplayName}" FontWeight="SemiBold" Margin="0,0,0,5" Foreground="{DynamicResource {x:Static SystemColors.WindowTextBrushKey}}"/>
+
+                                    <!-- Multiline Text Input (2 lines tall) -->
+                                    <TextBox Text="{Binding Value, UpdateSourceTrigger=PropertyChanged}" 
+                                             TextWrapping="Wrap"
+                                             AcceptsReturn="True"
+                                             Height="40"
+                                             VerticalScrollBarVisibility="Auto"
+                                             Padding="5"
+                                             FontFamily="Consolas"
+                                             FontSize="11"
+                                             Visibility="{Binding InputType, Converter={StaticResource InputTypeToVisibilityConverter}, ConverterParameter=multiline}"/>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </GroupBox>
+
+                <!-- Prompt Section -->
+                <GroupBox Header="Prompt" Margin="0,0,0,15" Padding="10">
+                    <ItemsControl ItemsSource="{Binding WorkflowInputs[Prompt]}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel Margin="0,0,0,15">
+                                    <TextBlock Text="{Binding DisplayName}" FontWeight="SemiBold" Margin="0,0,0,5" Foreground="{DynamicResource {x:Static SystemColors.WindowTextBrushKey}}"/>
+
+                                    <!-- Multiline Text -->
+                                    <TextBox Text="{Binding Value, UpdateSourceTrigger=PropertyChanged}" 
+                                             TextWrapping="Wrap"
+                                             AcceptsReturn="True"
+                                             MinHeight="100"
+                                             MaxHeight="200"
+                                             VerticalScrollBarVisibility="Auto"
+                                             Padding="5"
+                                             FontFamily="Consolas"
+                                             FontSize="11"
+                                             Visibility="{Binding InputType, Converter={StaticResource InputTypeToVisibilityConverter}, ConverterParameter=multiline}"/>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </GroupBox>
+
+                <!-- Detailer Section -->
+                <GroupBox Header="Detailer" Margin="0,0,0,15" Padding="10">
+                    <ItemsControl ItemsSource="{Binding WorkflowInputs[Detailer]}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding DisplayName}" Margin="0,5" Foreground="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}" FontStyle="Italic"/>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </GroupBox>
+
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
 </UserControl>

@@ -97,13 +97,13 @@ namespace chara2img.Views
                     e.Handled = true;
                     break;
 
-                case Key.Up:
+                case Key.Down:
                     // Go to next job
                     viewModel.NavigateToNextJobCommand.Execute(null);
                     e.Handled = true;
                     break;
 
-                case Key.Down:
+                case Key.Up:
                     // Go to previous job
                     viewModel.NavigateToPreviousJobCommand.Execute(null);
                     e.Handled = true;

@@ -24,7 +24,8 @@
     </Window.Resources>
 
     <Grid>
-        <TabControl Background="{DynamicResource {x:Static SystemColors.ControlBrushKey}}">
+        <TabControl Background="{DynamicResource {x:Static SystemColors.ControlBrushKey}}"
+                    SelectedIndex="{Binding SelectedTabIndex}">
             
             <!-- Workflow Tab -->
             <TabItem Header="Workflow">
@@ -50,7 +51,6 @@
             <TabItem Header="Settings">
                 <views:SettingsTab/>
             </TabItem>
-            
         </TabControl>
     </Grid>
 </Window>

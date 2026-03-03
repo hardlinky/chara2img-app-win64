@@ -33,6 +33,16 @@
             </Grid>
         </StackPanel>
 
+        <StackPanel Grid.Row="1" Margin="0,0,0,15">
+            <Label Content="Workflow Options:" 
+                   Foreground="{DynamicResource {x:Static SystemColors.WindowTextBrushKey}}"
+                   FontWeight="SemiBold"/>
+            <CheckBox Content="Save workflow JSON file with each job" 
+                      IsChecked="{Binding SaveWorkflowWithJob}"
+                      Margin="5,5,0,5"
+                      ToolTip="When enabled, saves the workflow JSON file to the output folder when running a job, making it easy to reload the workflow later"/>
+        </StackPanel>
+
         <TextBlock Grid.Row="3" 
                    Text="Configure your Runpod serverless ComfyUI endpoint credentials above." 
                    VerticalAlignment="Bottom" 

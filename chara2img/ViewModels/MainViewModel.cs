@@ -203,6 +203,37 @@ namespace chara2img.ViewModels
             set { _imageZoom = value; OnPropertyChanged(); }
         }
 
+        private bool _saveWorkflowWithJob = true;
+
+        public bool SaveWorkflowWithJob
+        {
+            get => _saveWorkflowWithJob;
+            set 
+            { 
+                if (_saveWorkflowWithJob != value)
+                {
+                    _saveWorkflowWithJob = value;
+                    OnPropertyChanged();
+                    SaveSettings();
+                }
+            }
+        }
+
+        private int _selectedTabIndex = 0;
+
+        public int SelectedTabIndex
+        {
+            get => _selectedTabIndex;
+            set 
+            { 
+                if (_selectedTabIndex != value)
+                {
+                    _selectedTabIndex = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
         public MainViewModel()
         {
             RunJobCommand = new RelayCommand(async () => await RunJobAsync(), CanRunJob);
@@ -266,6 +297,7 @@ namespace chara2img.ViewModels
             OnPropertyChanged(nameof(WorkflowJson));
             OnPropertyChanged(nameof(HasWorkflow));
             OnPropertyChanged(nameof(WorkflowInputs)); // Add this to ensure inputs are updated
+            OnPropertyChanged(nameof(SaveWorkflowWithJob));
         }
 
         private RunpodService GetOrCreateService()
@@ -559,6 +591,7 @@ namespace chara2img.ViewModels
             _settings.EndpointId = _endpointId;
             _settings.OutputFolder = _outputFolder;
             _settings.LastWorkflowPath = _workflowFilePath;
+            _settings.SaveWorkflowWithJob = _saveWorkflowWithJob;
             _settings.Save();
         }
 
@@ -653,6 +686,9 @@ namespace chara2img.ViewModels
                 return;
             }
 
+            // Switch to Run tab (index 2: Workflow=0, Input=1, Run=2)
+            SelectedTabIndex = 2;
+
             try
             {
                 StatusMessage = "Submitting job...";
@@ -662,7 +698,7 @@ namespace chara2img.ViewModels
                 var workflow = JsonSerializer.Deserialize<object>(modifiedWorkflow);
 
                 var jobId = await service.SubmitJobAsync(workflow!);
-                
+
                 if (string.IsNullOrEmpty(jobId))
                 {
                     StatusMessage = "Failed to submit job";
@@ -687,6 +723,29 @@ namespace chara2img.ViewModels
                     WorkflowInputsJson = workflowInputsJson
                 };
                 Jobs.Insert(0, job);
+
+                // Save MODIFIED workflow JSON file if setting is enabled
+                if (SaveWorkflowWithJob && !string.IsNullOrEmpty(modifiedWorkflow))
+                {
+                    try
+                    {
+                        var workflowFileName = $"workflow_{jobId}_{DateTime.Now:yyyyMMdd_HHmmss}.json";
+                        var workflowFilePath = Path.Combine(_outputFolder, workflowFileName);
+                        
+                        // Format the JSON nicely for readability
+                        var formattedWorkflow = JsonSerializer.Serialize(
+                            JsonSerializer.Deserialize<object>(modifiedWorkflow),
+                            new JsonSerializerOptions { WriteIndented = true });
+                        
+                        File.WriteAllText(workflowFilePath, formattedWorkflow);
+                        StatusMessage = $"Job {jobId} submitted. Workflow saved to {workflowFileName}. Polling...";
+                    }
+                    catch (Exception saveEx)
+                    {
+                        // Don't fail the job if workflow save fails, just log it
+                        System.Diagnostics.Debug.WriteLine($"Failed to save workflow: {saveEx.Message}");
+                    }
+                }
 
                 StatusMessage = $"Job {jobId} submitted. Polling...";
 

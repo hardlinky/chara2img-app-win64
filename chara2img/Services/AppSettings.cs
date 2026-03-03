@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
 using chara2img.Models;
@@ -6,31 +8,31 @@ namespace chara2img.Services
 {
     public class AppSettings
     {
+        private static readonly string SettingsPath = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+            "Chara2IMG",
+            "settings.json");
+
         public string ApiKey { get; set; } = "";
         public string EndpointId { get; set; } = "";
         public string OutputFolder { get; set; } = "";
         public string LastWorkflowPath { get; set; } = "";
         public List<RunpodJob>? RecentJobs { get; set; }
-
-        private static readonly string SettingsFilePath = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-            "Chara2IMG",
-            "settings.json"
-        );
+        public bool SaveWorkflowWithJob { get; set; } = true; // NEW: Default to true
 
         public static AppSettings Load()
         {
             try
             {
-                if (File.Exists(SettingsFilePath))
+                if (File.Exists(SettingsPath))
                 {
-                    var json = File.ReadAllText(SettingsFilePath);
+                    var json = File.ReadAllText(SettingsPath);
                     return JsonSerializer.Deserialize<AppSettings>(json) ?? new AppSettings();
                 }
             }
             catch
             {
-                // If loading fails, return default settings
+                // If loading fails, return new settings
             }
 
             return new AppSettings();
@@ -40,14 +42,14 @@ namespace chara2img.Services
         {
             try
             {
-                var directory = Path.GetDirectoryName(SettingsFilePath);
+                var directory = Path.GetDirectoryName(SettingsPath);
                 if (!string.IsNullOrEmpty(directory))
                 {
                     Directory.CreateDirectory(directory);
                 }
 
                 var json = JsonSerializer.Serialize(this, new JsonSerializerOptions { WriteIndented = true });
-                File.WriteAllText(SettingsFilePath, json);
+                File.WriteAllText(SettingsPath, json);
             }
             catch
             {
