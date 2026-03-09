@@ -156,6 +156,28 @@ namespace chara2img.Services
                         };
                     }
 
+                case "mxSlider2D":
+                    {
+                        // Width x Height pair using Xi/Xf and Yi/Yf
+                        var width = inputs.TryGetProperty("Xi", out var xi) ? xi.GetInt32() : 1024;
+                        var height = inputs.TryGetProperty("Yi", out var yi) ? yi.GetInt32() : 1024;
+
+                        return new NumberPairInput
+                        {
+                            NodeId = nodeId,
+                            NodeTitle = title,
+                            Category = category,
+                            DisplayName = displayName,
+                            InputType = "number_pair",
+                            InputKey1 = "Xi",
+                            InputKey2 = "Yi",
+                            Label1 = "Width",
+                            Label2 = "Height",
+                            Value1 = width,
+                            Value2 = height
+                        };
+                    }
+
                 case "CR Integer Multiple":
                     {
                         var value = inputs.TryGetProperty("int", out var intVal) ? intVal.GetInt32().ToString() : "1";
