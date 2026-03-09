@@ -269,6 +269,9 @@ namespace chara2img.ViewModels
         public ICommand MoveCategoryDownCommand { get; }
         public ICommand ToggleCategoryCommand { get; }
 
+        public ICommand AddLoraCommand { get; }
+        public ICommand RemoveLoraCommand { get; }
+
         public double ImageZoom
         {
             get => _imageZoom;
@@ -327,6 +330,9 @@ namespace chara2img.ViewModels
             MoveCategoryUpCommand = new RelayCommand<CategoryInfo>(MoveCategoryUp, CanMoveCategoryUp);
             MoveCategoryDownCommand = new RelayCommand<CategoryInfo>(MoveCategoryDown, CanMoveCategoryDown);
             ToggleCategoryCommand = new RelayCommand<CategoryInfo>(ToggleCategory);
+
+            AddLoraCommand = new RelayCommand<object>(AddLora);
+            RemoveLoraCommand = new RelayCommand<LoraItem>(RemoveLora, item => item != null);
 
             // Load settings
             _settings = AppSettings.Load();
@@ -1380,6 +1386,37 @@ namespace chara2img.ViewModels
                 nextIndex++;
                 if (nextIndex >= Jobs.Count) nextIndex = 0;
                 searchCount++;
+            }
+        }
+
+        private void AddLora(object? parameter)
+        {
+            var loraListInput = parameter as LoraListInput;
+            if (loraListInput == null) return;
+    
+            loraListInput.Loras.Add(new LoraItem
+            {
+                Enabled = true,
+                LoraName = "",
+                Strength = 1.0
+            });
+        }
+
+        private void RemoveLora(LoraItem? loraItem)
+        {
+            if (loraItem == null) return;
+    
+            // Find the LoraListInput that contains this LoraItem
+            foreach (var category in WorkflowInputs.Values)
+            {
+                foreach (var input in category)
+                {
+                    if (input is LoraListInput loraListInput && loraListInput.Loras.Contains(loraItem))
+                    {
+                        loraListInput.Loras.Remove(loraItem);
+                        return;
+                    }
+                }
             }
         }
 

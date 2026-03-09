@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using chara2img.Models;
 
 namespace chara2img.Services
@@ -26,13 +27,16 @@ namespace chara2img.Services
                     var nodeDict = JsonSerializer.Deserialize<Dictionary<string, object>>(node.GetRawText());
                     if (nodeDict == null || !nodeDict.ContainsKey("inputs")) continue;
 
-                    var nodeInputs = JsonSerializer.Deserialize<Dictionary<string, object>>(
-                        JsonSerializer.Serialize(nodeDict["inputs"])) ?? new();
+                    // Use JsonObject to preserve property order
+                    var nodeInputsJson = JsonSerializer.Deserialize<JsonObject>(
+                        JsonSerializer.Serialize(nodeDict["inputs"]));
+                    
+                    if (nodeInputsJson == null) continue;
 
                     // Apply based on input type
                     if (input is TextInput textInput)
                     {
-                        nodeInputs[textInput.InputKey] = textInput.Value;
+                        nodeInputsJson[textInput.InputKey] = textInput.Value;
                     }
                     else if (input is NumberInput numberInput)
                     {
@@ -41,42 +45,62 @@ namespace chara2img.Services
                         {
                             if (int.TryParse(numberInput.Value, out var intValue))
                             {
-                                nodeInputs[numberInput.InputKey] = intValue;
+                                nodeInputsJson[numberInput.InputKey] = intValue;
                             }
                         }
                         else
                         {
                             if (double.TryParse(numberInput.Value, out var doubleValue))
                             {
-                                nodeInputs[numberInput.InputKey] = doubleValue;
+                                nodeInputsJson[numberInput.InputKey] = doubleValue;
                             }
                         }
                     }
                     else if (input is NumberPairInput numberPair)
                     {
-                        nodeInputs[numberPair.InputKey1] = numberPair.Value1;
-                        nodeInputs[numberPair.InputKey2] = numberPair.Value2;
+                        nodeInputsJson[numberPair.InputKey1] = numberPair.Value1;
+                        nodeInputsJson[numberPair.InputKey2] = numberPair.Value2;
                         // Sync float variants
-                        nodeInputs["Xf"] = numberPair.Value1;
-                        nodeInputs["Yf"] = numberPair.Value2;
+                        nodeInputsJson["Xf"] = numberPair.Value1;
+                        nodeInputsJson["Yf"] = numberPair.Value2;
                     }
                     else if (input is LoraListInput loraList)
                     {
+                        // Get all existing lora keys sorted by their index
+                        var existingLoraKeys = nodeInputsJson
+                            .Where(kvp => kvp.Key.StartsWith("lora_"))
+                            .Select(kvp => kvp.Key)
+                            .OrderBy(k => 
+                            {
+                                if (int.TryParse(k.Substring(5), out var index))
+                                    return index;
+                                return int.MaxValue;
+                            })
+                            .ToList();
+
+                        // Remove all existing lora entries
+                        foreach (var key in existingLoraKeys)
+                        {
+                            nodeInputsJson.Remove(key);
+                        }
+
+                        // Add loras preserving their sequential order
                         int loraIndex = 1;
                         foreach (var lora in loraList.Loras)
                         {
                             var loraKey = $"lora_{loraIndex}";
-                            nodeInputs[loraKey] = new Dictionary<string, object>
+                            var loraObject = new JsonObject
                             {
                                 ["on"] = lora.Enabled,
                                 ["lora"] = lora.LoraName,
                                 ["strength"] = lora.Strength
                             };
+                            nodeInputsJson[loraKey] = loraObject;
                             loraIndex++;
                         }
                     }
 
-                    nodeDict["inputs"] = nodeInputs;
+                    nodeDict["inputs"] = JsonSerializer.Deserialize<object>(nodeInputsJson.ToJsonString());
                     workflow[input.NodeId] = JsonSerializer.SerializeToElement(nodeDict);
                 }
 

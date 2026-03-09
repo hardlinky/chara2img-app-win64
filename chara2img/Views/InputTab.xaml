@@ -97,29 +97,77 @@
                             </Grid>
 
                             <!-- Lora List -->
-                            <ItemsControl ItemsSource="{Binding Loras}"
-                                          Visibility="{Binding InputType, Converter={StaticResource InputTypeToVisibilityConverter}, ConverterParameter=lora_list}">
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate>
-                                        <Grid Margin="0,5">
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="Auto"/>
-                                                <ColumnDefinition Width="*"/>
-                                                <ColumnDefinition Width="150"/>
-                                            </Grid.ColumnDefinitions>
+                            <StackPanel Visibility="{Binding InputType, Converter={StaticResource InputTypeToVisibilityConverter}, ConverterParameter=lora_list}">
+                                <!-- Add Lora Button -->
+                                <Button Command="{Binding DataContext.AddLoraCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                        CommandParameter="{Binding}"
+                                        Content="+ Add Lora"
+                                        HorizontalAlignment="Left"
+                                        Padding="10,5"
+                                        Margin="0,0,0,10"
+                                        Background="#4CAF50"
+                                        Foreground="White"
+                                        BorderThickness="0"
+                                        Cursor="Hand"/>
+                                
+                                <!-- Lora Items -->
+                                <ItemsControl ItemsSource="{Binding Loras}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Grid Margin="0,5">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="150"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
 
-                                            <CheckBox Grid.Column="0" IsChecked="{Binding Enabled}" VerticalAlignment="Center" Margin="0,0,10,0"/>
-                                            <TextBlock Grid.Column="1" Text="{Binding LoraName}" VerticalAlignment="Center" Foreground="{DynamicResource TextBrush}"/>
+                                                <CheckBox Grid.Column="0" 
+                                                          IsChecked="{Binding Enabled}" 
+                                                          VerticalAlignment="Center" 
+                                                          Margin="0,0,10,0"/>
+                                                
+                                                <TextBox Grid.Column="1" 
+                                                         Text="{Binding LoraName, UpdateSourceTrigger=PropertyChanged}" 
+                                                         VerticalAlignment="Center"
+                                                         Padding="5"
+                                                         Margin="0,0,10,0"/>
 
-                                            <StackPanel Grid.Column="2" Orientation="Horizontal">
-                                                <Slider Value="{Binding Strength}" Minimum="-2" Maximum="2" Width="80" VerticalAlignment="Center" 
-                                                        TickFrequency="0.1" IsSnapToTickEnabled="True"/>
-                                                <TextBox Text="{Binding Strength, StringFormat=F2}" Width="50" Margin="5,0,0,0" VerticalAlignment="Center" Padding="2"/>
-                                            </StackPanel>
-                                        </Grid>
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                            </ItemsControl>
+                                                <StackPanel Grid.Column="2" Orientation="Horizontal">
+                                                    <Slider Value="{Binding Strength}" 
+                                                            Minimum="-2" 
+                                                            Maximum="2" 
+                                                            Width="80" 
+                                                            VerticalAlignment="Center" 
+                                                            TickFrequency="0.1" 
+                                                            IsSnapToTickEnabled="True"/>
+                                                    <TextBox Text="{Binding Strength, StringFormat=F2}" 
+                                                             Width="50" 
+                                                             Margin="5,0,0,0" 
+                                                             VerticalAlignment="Center" 
+                                                             Padding="2"/>
+                                                </StackPanel>
+                                                
+                                                <!-- Remove Button -->
+                                                <Button Grid.Column="3"
+                                                        Command="{Binding DataContext.RemoveLoraCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                        CommandParameter="{Binding}"
+                                                        Content="×"
+                                                        Width="30"
+                                                        Height="30"
+                                                        Margin="5,0,0,0"
+                                                        ToolTip="Remove Lora"
+                                                        Background="#F44336"
+                                                        Foreground="White"
+                                                        BorderThickness="0"
+                                                        FontSize="16"
+                                                        FontWeight="Bold"
+                                                        Cursor="Hand"/>
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
                         </StackPanel>
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>
