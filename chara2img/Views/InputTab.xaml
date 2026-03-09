@@ -10,6 +10,121 @@
         <local:InputTypeToVisibilityConverter x:Key="InputTypeToVisibilityConverter"/>
         <local:InverseBoolToVisibilityConverter x:Key="InverseBoolToVisibilityConverter"/>
         <local:CollapseIconConverter x:Key="CollapseIconConverter"/>
+        
+        <!-- Style to remove blue highlight from category header buttons -->
+        <Style x:Key="CategoryHeaderButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+            <Setter Property="HorizontalAlignment" Value="Stretch"/>
+            <Setter Property="HorizontalContentAlignment" Value="Left"/>
+            <Setter Property="Padding" Value="10"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="border" 
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                            VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#22000000"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#44000000"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        
+        <!-- Template for expanded category content -->
+        <DataTemplate x:Key="CategoryContentTemplate">
+            <ItemsControl ItemsSource="{Binding Inputs}" 
+                          Padding="15"
+                          Focusable="False">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <StackPanel Margin="0,0,0,15">
+                            <TextBlock Text="{Binding DisplayName}" 
+                                       FontWeight="SemiBold" 
+                                       Margin="0,0,0,5" 
+                                       Foreground="{DynamicResource TextBrush}"/>
+
+                            <!-- Single Line Text Input -->
+                            <TextBox Text="{Binding Value, UpdateSourceTrigger=PropertyChanged}" 
+                                     Padding="5"
+                                     Visibility="{Binding InputType, Converter={StaticResource InputTypeToVisibilityConverter}, ConverterParameter=text}"/>
+
+                            <!-- Multiline Text Input -->
+                            <TextBox Text="{Binding Value, UpdateSourceTrigger=PropertyChanged}" 
+                                     TextWrapping="Wrap"
+                                     AcceptsReturn="True"
+                                     MinHeight="60"
+                                     MaxHeight="200"
+                                     VerticalScrollBarVisibility="Auto"
+                                     Padding="5"
+                                     FontFamily="Consolas"
+                                     FontSize="11"
+                                     Visibility="{Binding InputType, Converter={StaticResource InputTypeToVisibilityConverter}, ConverterParameter=multiline}"/>
+
+                            <!-- Number Input -->
+                            <TextBox Text="{Binding Value, UpdateSourceTrigger=PropertyChanged}" 
+                                     Padding="5"
+                                     Visibility="{Binding InputType, Converter={StaticResource InputTypeToVisibilityConverter}, ConverterParameter=number}"/>
+
+                            <!-- Number Pair Input (Width x Height) -->
+                            <Grid Visibility="{Binding InputType, Converter={StaticResource InputTypeToVisibilityConverter}, ConverterParameter=number_pair}">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="100"/>
+                                    <ColumnDefinition Width="20"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="100"/>
+                                </Grid.ColumnDefinitions>
+
+                                <TextBlock Grid.Column="0" Text="{Binding Label1}" VerticalAlignment="Center" Margin="0,0,10,0" Foreground="{DynamicResource TextBrush}"/>
+                                <TextBox Grid.Column="1" Text="{Binding Value1, UpdateSourceTrigger=PropertyChanged}" Padding="5"/>
+                                <TextBlock Grid.Column="2" Text="×" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="16" Foreground="{DynamicResource TextBrush}"/>
+                                <TextBlock Grid.Column="3" Text="{Binding Label2}" VerticalAlignment="Center" Margin="0,0,10,0" Foreground="{DynamicResource TextBrush}"/>
+                                <TextBox Grid.Column="4" Text="{Binding Value2, UpdateSourceTrigger=PropertyChanged}" Padding="5"/>
+                            </Grid>
+
+                            <!-- Lora List -->
+                            <ItemsControl ItemsSource="{Binding Loras}"
+                                          Visibility="{Binding InputType, Converter={StaticResource InputTypeToVisibilityConverter}, ConverterParameter=lora_list}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid Margin="0,5">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="150"/>
+                                            </Grid.ColumnDefinitions>
+
+                                            <CheckBox Grid.Column="0" IsChecked="{Binding Enabled}" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                                            <TextBlock Grid.Column="1" Text="{Binding LoraName}" VerticalAlignment="Center" Foreground="{DynamicResource TextBrush}"/>
+
+                                            <StackPanel Grid.Column="2" Orientation="Horizontal">
+                                                <Slider Value="{Binding Strength}" Minimum="-2" Maximum="2" Width="80" VerticalAlignment="Center" 
+                                                        TickFrequency="0.1" IsSnapToTickEnabled="True"/>
+                                                <TextBox Text="{Binding Strength, StringFormat=F2}" Width="50" Margin="5,0,0,0" VerticalAlignment="Center" Padding="2"/>
+                                            </StackPanel>
+                                        </Grid>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </DataTemplate>
     </UserControl.Resources>
     
     <Grid Margin="20" Background="{DynamicResource WindowBackgroundBrush}">
@@ -55,14 +170,9 @@
                                 CornerRadius="4" 
                                 Margin="0,0,0,10"
                                 Background="{DynamicResource WindowBackgroundBrush}">
-                            <Grid>
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="Auto"/>
-                                </Grid.RowDefinitions>
-
+                            <StackPanel>
                                 <!-- Category Header -->
-                                <Grid Grid.Row="0" Background="{DynamicResource AccentBrush}">
+                                <Grid Background="#33000000">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*"/>
                                         <ColumnDefinition Width="Auto"/>
@@ -72,12 +182,7 @@
                                     <Button Grid.Column="0" 
                                             Command="{Binding DataContext.ToggleCategoryCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                             CommandParameter="{Binding CategoryInfo}"
-                                            Background="Transparent"
-                                            BorderThickness="0"
-                                            HorizontalAlignment="Stretch"
-                                            HorizontalContentAlignment="Left"
-                                            Padding="10"
-                                            Cursor="Hand">
+                                            Style="{StaticResource CategoryHeaderButtonStyle}">
                                         <StackPanel Orientation="Horizontal">
                                             <TextBlock Text="{Binding CategoryInfo.IsCollapsed, Converter={StaticResource CollapseIconConverter}}"
                                                        FontFamily="Segoe UI Symbol"
@@ -113,87 +218,21 @@
                                     </StackPanel>
                                 </Grid>
 
-                                <!-- Category Content - Only visible when not collapsed -->
-                                <ItemsControl Grid.Row="1" 
-                                              ItemsSource="{Binding Inputs}"
-                                              Padding="15"
-                                              Visibility="{Binding CategoryInfo.IsCollapsed, Converter={StaticResource InverseBoolToVisibilityConverter}}">
-                                    <ItemsControl.ItemTemplate>
-                                        <DataTemplate>
-                                            <StackPanel Margin="0,0,0,15">
-                                                <TextBlock Text="{Binding DisplayName}" 
-                                                           FontWeight="SemiBold" 
-                                                           Margin="0,0,0,5" 
-                                                           Foreground="{DynamicResource TextBrush}"/>
-
-                                                <!-- Single Line Text Input -->
-                                                <TextBox Text="{Binding Value, UpdateSourceTrigger=PropertyChanged}" 
-                                                         Padding="5"
-                                                         Visibility="{Binding InputType, Converter={StaticResource InputTypeToVisibilityConverter}, ConverterParameter=text}"/>
-
-                                                <!-- Multiline Text Input -->
-                                                <TextBox Text="{Binding Value, UpdateSourceTrigger=PropertyChanged}" 
-                                                         TextWrapping="Wrap"
-                                                         AcceptsReturn="True"
-                                                         MinHeight="60"
-                                                         MaxHeight="200"
-                                                         VerticalScrollBarVisibility="Auto"
-                                                         Padding="5"
-                                                         FontFamily="Consolas"
-                                                         FontSize="11"
-                                                         Visibility="{Binding InputType, Converter={StaticResource InputTypeToVisibilityConverter}, ConverterParameter=multiline}"/>
-
-                                                <!-- Number Input -->
-                                                <TextBox Text="{Binding Value, UpdateSourceTrigger=PropertyChanged}" 
-                                                         Padding="5"
-                                                         Visibility="{Binding InputType, Converter={StaticResource InputTypeToVisibilityConverter}, ConverterParameter=number}"/>
-
-                                                <!-- Number Pair Input (Width x Height) -->
-                                                <Grid Visibility="{Binding InputType, Converter={StaticResource InputTypeToVisibilityConverter}, ConverterParameter=number_pair}">
-                                                    <Grid.ColumnDefinitions>
-                                                        <ColumnDefinition Width="Auto"/>
-                                                        <ColumnDefinition Width="100"/>
-                                                        <ColumnDefinition Width="20"/>
-                                                        <ColumnDefinition Width="Auto"/>
-                                                        <ColumnDefinition Width="100"/>
-                                                    </Grid.ColumnDefinitions>
-
-                                                    <TextBlock Grid.Column="0" Text="{Binding Label1}" VerticalAlignment="Center" Margin="0,0,10,0" Foreground="{DynamicResource TextBrush}"/>
-                                                    <TextBox Grid.Column="1" Text="{Binding Value1, UpdateSourceTrigger=PropertyChanged}" Padding="5"/>
-                                                    <TextBlock Grid.Column="2" Text="×" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="16" Foreground="{DynamicResource TextBrush}"/>
-                                                    <TextBlock Grid.Column="3" Text="{Binding Label2}" VerticalAlignment="Center" Margin="0,0,10,0" Foreground="{DynamicResource TextBrush}"/>
-                                                    <TextBox Grid.Column="4" Text="{Binding Value2, UpdateSourceTrigger=PropertyChanged}" Padding="5"/>
-                                                </Grid>
-
-                                                <!-- Lora List -->
-                                                <ItemsControl ItemsSource="{Binding Loras}"
-                                                              Visibility="{Binding InputType, Converter={StaticResource InputTypeToVisibilityConverter}, ConverterParameter=lora_list}">
-                                                    <ItemsControl.ItemTemplate>
-                                                        <DataTemplate>
-                                                            <Grid Margin="0,5">
-                                                                <Grid.ColumnDefinitions>
-                                                                    <ColumnDefinition Width="Auto"/>
-                                                                    <ColumnDefinition Width="*"/>
-                                                                    <ColumnDefinition Width="150"/>
-                                                                </Grid.ColumnDefinitions>
-
-                                                                <CheckBox Grid.Column="0" IsChecked="{Binding Enabled}" VerticalAlignment="Center" Margin="0,0,10,0"/>
-                                                                <TextBlock Grid.Column="1" Text="{Binding LoraName}" VerticalAlignment="Center" Foreground="{DynamicResource TextBrush}"/>
-
-                                                                <StackPanel Grid.Column="2" Orientation="Horizontal">
-                                                                    <Slider Value="{Binding Strength}" Minimum="-2" Maximum="2" Width="80" VerticalAlignment="Center" 
-                                                                            TickFrequency="0.1" IsSnapToTickEnabled="True"/>
-                                                                    <TextBox Text="{Binding Strength, StringFormat=F2}" Width="50" Margin="5,0,0,0" VerticalAlignment="Center" Padding="2"/>
-                                                                </StackPanel>
-                                                            </Grid>
-                                                        </DataTemplate>
-                                                    </ItemsControl.ItemTemplate>
-                                                </ItemsControl>
-                                            </StackPanel>
-                                        </DataTemplate>
-                                    </ItemsControl.ItemTemplate>
-                                </ItemsControl>
-                            </Grid>
+                                <!-- Category Content - ONLY render when NOT collapsed -->
+                                <ContentControl>
+                                    <ContentControl.Style>
+                                        <Style TargetType="ContentControl">
+                                            <Setter Property="Content" Value="{x:Null}"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding CategoryInfo.IsCollapsed}" Value="False">
+                                                    <Setter Property="ContentTemplate" Value="{StaticResource CategoryContentTemplate}"/>
+                                                    <Setter Property="Content" Value="{Binding}"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </ContentControl.Style>
+                                </ContentControl>
+                            </StackPanel>
                         </Border>
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>

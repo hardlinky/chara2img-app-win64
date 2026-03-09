@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
@@ -34,6 +35,8 @@ namespace chara2img.ViewModels
         private double _imageZoom = 1.0;
         private const int MaxRecentJobs = 50; // Keep last 50 jobs
         private string _selectedTheme = "Light";
+        private CancellationTokenSource? _saveCategoryCts;
+        private readonly object _saveLock = new();
 
         private int _maxPollingAttempts = 150;
 
@@ -1083,7 +1086,7 @@ namespace chara2img.ViewModels
                 Title = "Save Image As",
                 Filter = "PNG Image (*.png)|*.png|JPEG Image (*.jpg)|*.jpg|All Files (*.*)|*.*",
                 DefaultExt = ".png",
-                FileName = $"image_{DateTime.Now:yyyyMMdd_HHmmss}.png"
+                FileName = $"image_{DateTime.Now:yyyyMMdd_H Hmmss}.png"
             };
 
             if (dialog.ShowDialog() == true)
@@ -1215,7 +1218,7 @@ namespace chara2img.ViewModels
     
             // Rebuild view models with new order
             BuildCategoryViewModels();
-            SaveCategoryPreferences();
+            SaveCategoryPreferencesDebounced(); // Changed from SaveCategoryPreferences()
         }
 
         private void MoveCategoryDown(CategoryInfo? category)
@@ -1233,7 +1236,7 @@ namespace chara2img.ViewModels
     
             // Rebuild view models with new order
             BuildCategoryViewModels();
-            SaveCategoryPreferences();
+            SaveCategoryPreferencesDebounced(); // Changed from SaveCategoryPreferences()
         }
 
         private void ToggleCategory(CategoryInfo? category)
@@ -1241,7 +1244,7 @@ namespace chara2img.ViewModels
             if (category == null) return;
     
             category.IsCollapsed = !category.IsCollapsed;
-            SaveCategoryPreferences();
+            SaveCategoryPreferencesDebounced();
         }
 
         private void SaveCategoryPreferences()
@@ -1259,6 +1262,36 @@ namespace chara2img.ViewModels
     
             _settings.CategoryPreferences = preferences;
             _settings.Save();
+        }
+
+        private void SaveCategoryPreferencesDebounced()
+        {
+            lock (_saveLock)
+            {
+                // Cancel any pending save
+                _saveCategoryCts?.Cancel();
+                _saveCategoryCts = new CancellationTokenSource();
+                
+                var cts = _saveCategoryCts;
+
+                // Save after 500ms of inactivity (debounce)
+                Task.Run(async () =>
+                {
+                    try
+                    {
+                        await Task.Delay(500, cts.Token);
+                        
+                        if (!cts.Token.IsCancellationRequested)
+                        {
+                            SaveCategoryPreferences();
+                        }
+                    }
+                    catch (TaskCanceledException)
+                    {
+                        // Expected when user toggles rapidly
+                    }
+                });
+            }
         }
 
         // NEW: Navigation methods

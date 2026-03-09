@@ -42,10 +42,17 @@ namespace chara2img.Models
             }
         }
 
+        // Don't serialize base64 image data - it's huge!
+        [JsonIgnore]
         public string? ImageBase64 { get; set; }
+        
+        [JsonIgnore]
         public List<string>? AllImagesBase64 { get; set; }
+        
+        // Only serialize file paths - these are small
         public string? ImageFilePath { get; set; }
         public List<string>? ImageFilePaths { get; set; }
+        
         public DateTime CreatedAt { get; set; }
         
         public DateTime? CompletedAt
@@ -63,6 +70,9 @@ namespace chara2img.Models
         }
 
         public string? ErrorMessage { get; set; }
+        
+        // Also don't serialize the full raw response - it can be huge too
+        [JsonIgnore]
         public string? RawStatusResponse { get; set; }
         
         // Store the workflow inputs used for this job to enable rerun
@@ -107,46 +117,31 @@ namespace chara2img.Models
 
     public class RunpodResponse
     {
-        [JsonPropertyName("delayTime")]
-        public int DelayTime { get; set; }
-
-        [JsonPropertyName("executionTime")]
-        public int ExecutionTime { get; set; }
-
         [JsonPropertyName("id")]
         public string? Id { get; set; }
+
+        [JsonPropertyName("status")]
+        public string? Status { get; set; }
+
+        [JsonPropertyName("workerId")]
+        public string? WorkerId { get; set; }
 
         [JsonPropertyName("output")]
         public RunpodOutput? Output { get; set; }
 
-        [JsonPropertyName("status")]
-        public string? Status { get; set; }
-        
         [JsonPropertyName("error")]
         public string? Error { get; set; }
-
-        [JsonPropertyName("workerId")]
-        public string? WorkerId { get; set; }
     }
 
     public class RunpodOutput
     {
-        [JsonPropertyName("message")]
-        public string? Message { get; set; }
-        
         [JsonPropertyName("images")]
-        public List<RunpodImageOutput>? Images { get; set; }
+        public List<RunpodImage>? Images { get; set; }
     }
 
-    public class RunpodImageOutput
+    public class RunpodImage
     {
         [JsonPropertyName("data")]
         public string? Data { get; set; }
-
-        [JsonPropertyName("filename")]
-        public string? FileName { get; set; }
-
-        [JsonPropertyName("type")]
-        public string? Type { get; set; }
     }
 }

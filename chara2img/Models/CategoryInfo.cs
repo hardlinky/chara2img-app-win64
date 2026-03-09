@@ -18,7 +18,14 @@ namespace chara2img.Models
         public bool IsCollapsed
         {
             get => _isCollapsed;
-            set { _isCollapsed = value; OnPropertyChanged(); }
+            set 
+            { 
+                if (_isCollapsed != value)
+                {
+                    _isCollapsed = value;
+                    OnPropertyChanged();
+                }
+            }
         }
 
         public int Order
