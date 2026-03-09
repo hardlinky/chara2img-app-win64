@@ -44,6 +44,23 @@ namespace chara2img.ViewModels
         public ObservableCollection<string> AvailableThemes { get; } = new() { "Light", "Dark" };
         public ObservableCollection<string> ActiveJobStatuses { get; } = new();
 
+        private ObservableCollection<CategoryInfo> _categories = new();
+
+        public ObservableCollection<CategoryInfo> Categories
+        {
+            get => _categories;
+            set { _categories = value; OnPropertyChanged(); }
+        }
+
+        // Add this new property for the pre-built category UI items
+        private ObservableCollection<CategoryViewModel> _categoryViewModels = new();
+
+        public ObservableCollection<CategoryViewModel> CategoryViewModels
+        {
+            get => _categoryViewModels;
+            set { _categoryViewModels = value; OnPropertyChanged(); }
+        }
+
         public string ApiKey
         {
             get => _apiKey;
@@ -245,6 +262,10 @@ namespace chara2img.ViewModels
         public ICommand NavigateToPreviousJobCommand { get; }
         public ICommand NavigateToNextJobCommand { get; }
 
+        public ICommand MoveCategoryUpCommand { get; }
+        public ICommand MoveCategoryDownCommand { get; }
+        public ICommand ToggleCategoryCommand { get; }
+
         public double ImageZoom
         {
             get => _imageZoom;
@@ -299,6 +320,10 @@ namespace chara2img.ViewModels
             LoadJobInputsCommand = new RelayCommand<RunpodJob>(LoadJobInputs, job => job != null && !string.IsNullOrEmpty(job?.WorkflowInputsJson));
             NavigateToPreviousJobCommand = new RelayCommand(NavigateToPreviousJob, CanNavigateToPreviousJob);
             NavigateToNextJobCommand = new RelayCommand(NavigateToNextJob, CanNavigateToNextJob);
+
+            MoveCategoryUpCommand = new RelayCommand<CategoryInfo>(MoveCategoryUp, CanMoveCategoryUp);
+            MoveCategoryDownCommand = new RelayCommand<CategoryInfo>(MoveCategoryDown, CanMoveCategoryDown);
+            ToggleCategoryCommand = new RelayCommand<CategoryInfo>(ToggleCategory);
 
             // Load settings
             _settings = AppSettings.Load();
@@ -1099,10 +1124,141 @@ namespace chara2img.ViewModels
             if (string.IsNullOrWhiteSpace(WorkflowJson))
             {
                 WorkflowInputs = new();
+                Categories.Clear();
+                CategoryViewModels.Clear();
                 return;
             }
 
             WorkflowInputs = WorkflowInputParser.ParseWorkflow(WorkflowJson);
+            
+            // Update categories and build view models
+            UpdateCategoriesFromInputs();
+            BuildCategoryViewModels();
+        }
+
+        private void BuildCategoryViewModels()
+        {
+            CategoryViewModels.Clear();
+
+            foreach (var category in Categories)
+            {
+                if (WorkflowInputs.TryGetValue(category.Name, out var inputs))
+                {
+                    var viewModel = new CategoryViewModel
+                    {
+                        CategoryInfo = category,
+                        Inputs = inputs
+                    };
+                    CategoryViewModels.Add(viewModel);
+                }
+            }
+        }
+
+        private void UpdateCategoriesFromInputs()
+        {
+            // Get existing preferences
+            var preferences = _settings.CategoryPreferences ?? new Dictionary<string, CategoryPreference>();
+            
+            // Create category info for each category in WorkflowInputs
+            var newCategories = new List<CategoryInfo>();
+            int defaultOrder = 0;
+            
+            foreach (var categoryKey in WorkflowInputs.Keys)
+            {
+                var categoryInfo = new CategoryInfo
+                {
+                    Name = categoryKey,
+                    Order = preferences.ContainsKey(categoryKey) ? preferences[categoryKey].Order : defaultOrder++,
+                    IsCollapsed = preferences.ContainsKey(categoryKey) && preferences[categoryKey].IsCollapsed
+                };
+                
+                newCategories.Add(categoryInfo);
+            }
+            
+            // Sort by order
+            newCategories = newCategories.OrderBy(c => c.Order).ToList();
+            
+            // Update the observable collection
+            Categories.Clear();
+            foreach (var cat in newCategories)
+            {
+                Categories.Add(cat);
+            }
+        }
+
+        private bool CanMoveCategoryUp(CategoryInfo? category)
+        {
+            if (category == null) return false;
+            var index = Categories.IndexOf(category);
+            return index > 0;
+        }
+
+        private bool CanMoveCategoryDown(CategoryInfo? category)
+        {
+            if (category == null) return false;
+            var index = Categories.IndexOf(category);
+            return index >= 0 && index < Categories.Count - 1;
+        }
+
+        private void MoveCategoryUp(CategoryInfo? category)
+        {
+            if (!CanMoveCategoryUp(category) || category == null) return;
+    
+            var index = Categories.IndexOf(category);
+            Categories.Move(index, index - 1);
+    
+            // Update order values
+            for (int i = 0; i < Categories.Count; i++)
+            {
+                Categories[i].Order = i;
+            }
+    
+            // Rebuild view models with new order
+            BuildCategoryViewModels();
+            SaveCategoryPreferences();
+        }
+
+        private void MoveCategoryDown(CategoryInfo? category)
+        {
+            if (!CanMoveCategoryDown(category) || category == null) return;
+    
+            var index = Categories.IndexOf(category);
+            Categories.Move(index, index + 1);
+    
+            // Update order values
+            for (int i = 0; i < Categories.Count; i++)
+            {
+                Categories[i].Order = i;
+            }
+    
+            // Rebuild view models with new order
+            BuildCategoryViewModels();
+            SaveCategoryPreferences();
+        }
+
+        private void ToggleCategory(CategoryInfo? category)
+        {
+            if (category == null) return;
+    
+            category.IsCollapsed = !category.IsCollapsed;
+            SaveCategoryPreferences();
+        }
+
+        private void SaveCategoryPreferences()
+        {
+            var preferences = new Dictionary<string, CategoryPreference>();
+    
+            foreach (var category in Categories)
+            {
+                preferences[category.Name] = new CategoryPreference
+                {
+                    Order = category.Order,
+                    IsCollapsed = category.IsCollapsed
+                };
+            }
+    
+            _settings.CategoryPreferences = preferences;
+            _settings.Save();
         }
 
         // NEW: Navigation methods

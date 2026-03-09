@@ -20,7 +20,8 @@ namespace chara2img.Services
         public List<RunpodJob>? RecentJobs { get; set; }
         public bool SaveWorkflowWithJob { get; set; } = true;
         public string Theme { get; set; } = "Light";
-        public int MaxPollingAttempts { get; set; } = 150; // Default: 150 attempts (5 minutes at 2s intervals)
+        public int MaxPollingAttempts { get; set; } = 150;
+        public Dictionary<string, CategoryPreference>? CategoryPreferences { get; set; }
 
         public static AppSettings Load()
         {
@@ -58,5 +59,11 @@ namespace chara2img.Services
                 // Silently fail if we can't save settings
             }
         }
+    }
+
+    public class CategoryPreference
+    {
+        public int Order { get; set; }
+        public bool IsCollapsed { get; set; }
     }
 }
