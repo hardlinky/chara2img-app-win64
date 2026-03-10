@@ -22,6 +22,7 @@ namespace chara2img.Services
         public string Theme { get; set; } = "Light";
         public int MaxPollingAttempts { get; set; } = 150;
         public Dictionary<string, CategoryPreference>? CategoryPreferences { get; set; }
+        public string? LastInputValuesJson { get; set; }
 
         public static AppSettings Load()
         {

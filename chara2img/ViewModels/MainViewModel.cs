@@ -824,6 +824,9 @@ namespace chara2img.ViewModels
             {
                 StatusMessage = "Submitting job...";
 
+                // Save the current input values for next time
+                SaveLastInputValues();
+
                 var service = GetOrCreateService();
                 var modifiedWorkflow = WorkflowInputApplier.ApplyInputs(WorkflowJson, WorkflowInputs);
                 var workflow = JsonSerializer.Deserialize<object>(modifiedWorkflow);
@@ -1140,9 +1143,108 @@ namespace chara2img.ViewModels
 
             WorkflowInputs = WorkflowInputParser.ParseWorkflow(WorkflowJson);
             
+            // Try to restore last input values for this workflow
+            RestoreLastInputValues();
+            
             // Update categories and build view models
             UpdateCategoriesFromInputs();
             BuildCategoryViewModels();
+        }
+
+        private void RestoreLastInputValues()
+        {
+            if (string.IsNullOrEmpty(_settings.LastInputValuesJson))
+                return;
+
+            try
+            {
+                // Deserialize the saved workflow inputs
+                var savedInputs = JsonSerializer.Deserialize<Dictionary<string, ObservableCollection<WorkflowInput>>>(
+                    _settings.LastInputValuesJson,
+                    new JsonSerializerOptions 
+                    { 
+                        Converters = { new WorkflowInputConverter() },
+                        PropertyNameCaseInsensitive = true
+                    });
+
+                if (savedInputs == null || savedInputs.Count == 0)
+                    return;
+
+                // Merge the saved values into the current workflow inputs
+                foreach (var category in savedInputs)
+                {
+                    if (!WorkflowInputs.ContainsKey(category.Key))
+                        continue;
+
+                    var currentInputs = WorkflowInputs[category.Key];
+                    
+                    foreach (var savedInput in category.Value)
+                    {
+                        if (savedInput == null) continue;
+
+                        // Find matching input by NodeId and DisplayName
+                        var matchingInput = currentInputs.FirstOrDefault(i => 
+                            i.NodeId == savedInput.NodeId && i.DisplayName == savedInput.DisplayName);
+
+                        if (matchingInput == null) continue;
+
+                        // Restore values based on input type
+                        if (matchingInput is TextInput currentText && savedInput is TextInput savedText)
+                        {
+                            currentText.Value = savedText.Value;
+                        }
+                        else if (matchingInput is NumberInput currentNumber && savedInput is NumberInput savedNumber)
+                        {
+                            currentNumber.Value = savedNumber.Value;
+                        }
+                        else if (matchingInput is NumberPairInput currentPair && savedInput is NumberPairInput savedPair)
+                        {
+                            currentPair.Value1 = savedPair.Value1;
+                            currentPair.Value2 = savedPair.Value2;
+                        }
+                        else if (matchingInput is LoraListInput currentLora && savedInput is LoraListInput savedLora)
+                        {
+                            currentLora.Loras.Clear();
+                            foreach (var lora in savedLora.Loras)
+                            {
+                                currentLora.Loras.Add(new LoraItem
+                                {
+                                    Enabled = lora.Enabled,
+                                    LoraName = lora.LoraName,
+                                    Strength = lora.Strength
+                                });
+                            }
+                        }
+                    }
+                }
+            }
+            catch
+            {
+                // Silently fail if we can't restore last inputs
+            }
+        }
+
+        private void SaveLastInputValues()
+        {
+            try
+            {
+                // Serialize current workflow inputs
+                var inputsJson = JsonSerializer.Serialize(
+                    WorkflowInputs,
+                    new JsonSerializerOptions 
+                    { 
+                        WriteIndented = false,
+                        Converters = { new WorkflowInputConverter() },
+                        PropertyNameCaseInsensitive = true
+                    });
+
+                _settings.LastInputValuesJson = inputsJson;
+                _settings.Save();
+            }
+            catch
+            {
+                // Silently fail if we can't save inputs
+            }
         }
 
         private void BuildCategoryViewModels()
