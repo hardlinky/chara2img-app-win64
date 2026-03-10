@@ -64,6 +64,10 @@ namespace chara2img.Services
                         nodeInputsJson["Xf"] = numberPair.Value1;
                         nodeInputsJson["Yf"] = numberPair.Value2;
                     }
+                    else if (input is BooleanInput boolInput)
+                    {
+                        nodeInputsJson[boolInput.InputKey] = boolInput.Value;
+                    }
                     else if (input is LoraListInput loraList)
                     {
                         // Get all existing lora keys sorted by their index

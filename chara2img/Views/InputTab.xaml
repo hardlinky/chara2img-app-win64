@@ -173,6 +173,12 @@
                                 <TextBox Grid.Column="4" Text="{Binding Value2, UpdateSourceTrigger=PropertyChanged}" Padding="5"/>
                             </Grid>
 
+                            <!-- Boolean Input (Checkbox) -->
+                            <CheckBox IsChecked="{Binding Value, UpdateSourceTrigger=PropertyChanged}"
+                                      VerticalAlignment="Center"
+                                      Content=""
+                                      Visibility="{Binding InputType, Converter={StaticResource InputTypeToVisibilityConverter}, ConverterParameter=boolean}"/>
+
                             <!-- Lora List -->
                             <StackPanel Visibility="{Binding InputType, Converter={StaticResource InputTypeToVisibilityConverter}, ConverterParameter=lora_list}">
                                 <!-- Add Lora Button -->

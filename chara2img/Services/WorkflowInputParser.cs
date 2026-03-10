@@ -170,6 +170,28 @@ namespace chara2img.Services
                         break;
                     }
 
+                case "PrimitiveBoolean":
+                    {
+                        // Boolean input (checkbox)
+                        var value = false;
+                        if (inputs.TryGetProperty("value", out var valueElement))
+                        {
+                            value = valueElement.ValueKind == JsonValueKind.True;
+                        }
+
+                        return new BooleanInput
+                        {
+                            NodeId = nodeId,
+                            NodeTitle = title,
+                            Category = category,
+                            DisplayName = displayName,
+                            InputType = "boolean",
+                            InputKey = "value",
+                            Value = value,
+                            VariableHint = variableHint
+                        };
+                    }
+
                 case "EmptyLatentImage":
                     {
                         // Width x Height pair

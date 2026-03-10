@@ -201,4 +201,22 @@ namespace chara2img.Models
             set { _loras = value; OnPropertyChanged(); }
         }
     }
+
+    public class BooleanInput : WorkflowInput
+    {
+        private bool _value;
+        private string _inputKey = "";
+
+        public string InputKey
+        {
+            get => _inputKey;
+            set { _inputKey = value; OnPropertyChanged(); }
+        }
+
+        public bool Value
+        {
+            get => _value;
+            set { _value = value; OnPropertyChanged(); }
+        }
+    }
 }

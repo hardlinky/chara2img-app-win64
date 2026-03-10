@@ -37,6 +37,7 @@ namespace chara2img.Services
                 "number" => JsonSerializer.Deserialize<NumberInput>(root.GetRawText(), optionsWithoutConverter),
                 "number_pair" or "numberpair" => JsonSerializer.Deserialize<NumberPairInput>(root.GetRawText(), optionsWithoutConverter),
                 "lora_list" => JsonSerializer.Deserialize<LoraListInput>(root.GetRawText(), optionsWithoutConverter),
+                "boolean" => JsonSerializer.Deserialize<BooleanInput>(root.GetRawText(), optionsWithoutConverter),
                 _ => null
             };
 
@@ -66,6 +67,9 @@ namespace chara2img.Services
                     break;
                 case LoraListInput loraListInput:
                     JsonSerializer.Serialize(writer, loraListInput, optionsWithoutConverter);
+                    break;
+                case BooleanInput booleanInput:
+                    JsonSerializer.Serialize(writer, booleanInput, optionsWithoutConverter);
                     break;
                 default:
                     // Fallback to base type
