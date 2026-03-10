@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Text;
 using System.Text.Json;
 using chara2img.Models;
 
@@ -67,6 +68,36 @@ namespace chara2img.Services
             return InferInputFromNodeType(nodeId, title, category, displayName, classType, inputs);
         }
 
+        private static string GenerateVariableHint(string category, string displayName)
+        {
+            // Only Character, Costume, and Character Pose can be used in prompts
+            var prefix = category switch
+            {
+                "Character" => "Character",
+                "Costume" => "Costume",
+                "Character Pose" => "CharaPose",
+                _ => null
+            };
+
+            // Return empty string if category is not supported or if it's a Name field
+            if (prefix == null || displayName.Equals("Name", StringComparison.OrdinalIgnoreCase))
+            {
+                return "";
+            }
+
+            // Convert DisplayName to variable format: remove spaces and special chars
+            var variableSuffix = new StringBuilder();
+            foreach (var c in displayName)
+            {
+                if (char.IsLetterOrDigit(c))
+                {
+                    variableSuffix.Append(c);
+                }
+            }
+
+            return $"{{{prefix}_{variableSuffix}}}";
+        }
+
         private static WorkflowInput? InferInputFromNodeType(
             string nodeId, 
             string title, 
@@ -75,6 +106,8 @@ namespace chara2img.Services
             string classType, 
             JsonElement inputs)
         {
+            var variableHint = GenerateVariableHint(category, displayName);
+
             // Determine input type based on node class_type and available inputs
             switch (classType)
             {
@@ -91,7 +124,8 @@ namespace chara2img.Services
                             DisplayName = displayName,
                             InputType = "multiline",
                             InputKey = "text",
-                            Value = value
+                            Value = value,
+                            VariableHint = variableHint
                         };
                     }
 
@@ -111,7 +145,8 @@ namespace chara2img.Services
                                     DisplayName = displayName,
                                     InputType = "text",
                                     InputKey = "value",
-                                    Value = value
+                                    Value = value,
+                                    VariableHint = variableHint
                                 };
                             }
                             else if (valueElement.ValueKind == JsonValueKind.Number)
@@ -127,7 +162,8 @@ namespace chara2img.Services
                                     InputType = "number",
                                     InputKey = "value",
                                     Value = isInteger ? ((int)value).ToString() : value.ToString("F2"),
-                                    IsInteger = isInteger
+                                    IsInteger = isInteger,
+                                    VariableHint = variableHint
                                 };
                             }
                         }
@@ -152,7 +188,8 @@ namespace chara2img.Services
                             Label1 = "Width",
                             Label2 = "Height",
                             Value1 = width,
-                            Value2 = height
+                            Value2 = height,
+                            VariableHint = variableHint
                         };
                     }
 
@@ -174,7 +211,8 @@ namespace chara2img.Services
                             Label1 = "Width",
                             Label2 = "Height",
                             Value1 = width,
-                            Value2 = height
+                            Value2 = height,
+                            VariableHint = variableHint
                         };
                     }
 
@@ -190,7 +228,8 @@ namespace chara2img.Services
                             InputType = "number",
                             InputKey = "int",
                             Value = value,
-                            IsInteger = true
+                            IsInteger = true,
+                            VariableHint = variableHint
                         };
                     }
 
@@ -206,7 +245,8 @@ namespace chara2img.Services
                             InputType = "number",
                             InputKey = "float",
                             Value = value,
-                            IsInteger = false
+                            IsInteger = false,
+                            VariableHint = variableHint
                         };
                     }
 
@@ -221,7 +261,8 @@ namespace chara2img.Services
                             DisplayName = displayName,
                             InputType = "text",
                             InputKey = "ckpt_name",
-                            Value = value
+                            Value = value,
+                            VariableHint = variableHint
                         };
                     }
 
@@ -254,7 +295,8 @@ namespace chara2img.Services
                             Category = category,
                             DisplayName = displayName,
                             InputType = "lora_list",
-                            Loras = loras
+                            Loras = loras,
+                            VariableHint = variableHint
                         };
                     }
 
@@ -273,7 +315,8 @@ namespace chara2img.Services
                                 InputType = "number",
                                 InputKey = "seed",
                                 Value = value,
-                                IsInteger = true
+                                IsInteger = true,
+                                VariableHint = variableHint
                             };
                         }
                         else if (inputs.TryGetProperty("steps", out var stepsElement))
@@ -288,7 +331,8 @@ namespace chara2img.Services
                                 InputType = "number",
                                 InputKey = "steps",
                                 Value = value,
-                                IsInteger = true
+                                IsInteger = true,
+                                VariableHint = variableHint
                             };
                         }
                         else if (inputs.TryGetProperty("cfg", out var cfgElement))
@@ -303,7 +347,8 @@ namespace chara2img.Services
                                 InputType = "number",
                                 InputKey = "cfg",
                                 Value = value,
-                                IsInteger = false
+                                IsInteger = false,
+                                VariableHint = variableHint
                             };
                         }
                         else if (inputs.TryGetProperty("sampler_name", out var samplerElement))
@@ -317,7 +362,8 @@ namespace chara2img.Services
                                 DisplayName = displayName,
                                 InputType = "text",
                                 InputKey = "sampler_name",
-                                Value = value
+                                Value = value,
+                                VariableHint = variableHint
                             };
                         }
                         else if (inputs.TryGetProperty("scheduler", out var schedulerElement))
@@ -331,7 +377,8 @@ namespace chara2img.Services
                                 DisplayName = displayName,
                                 InputType = "text",
                                 InputKey = "scheduler",
-                                Value = value
+                                Value = value,
+                                VariableHint = variableHint
                             };
                         }
                         else if (inputs.TryGetProperty("denoise", out var denoiseElement))
@@ -346,7 +393,8 @@ namespace chara2img.Services
                                 InputType = "number",
                                 InputKey = "denoise",
                                 Value = value,
-                                IsInteger = false
+                                IsInteger = false,
+                                VariableHint = variableHint
                             };
                         }
                         break;
@@ -370,7 +418,8 @@ namespace chara2img.Services
                         DisplayName = displayName,
                         InputType = "text",
                         InputKey = key,
-                        Value = value.GetString() ?? ""
+                        Value = value.GetString() ?? "",
+                        VariableHint = variableHint
                     };
                 }
                 else if (value.ValueKind == JsonValueKind.Number)
@@ -386,7 +435,8 @@ namespace chara2img.Services
                         InputType = "number",
                         InputKey = key,
                         Value = isInteger ? ((int)numValue).ToString() : numValue.ToString("F2"),
-                        IsInteger = isInteger
+                        IsInteger = isInteger,
+                        VariableHint = variableHint
                     };
                 }
             }

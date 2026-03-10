@@ -10,6 +10,7 @@ namespace chara2img.Models
         private string _category = "";
         private string _displayName = "";
         private string _inputType = "";
+        private string _variableHint = "";
 
         public string NodeId
         {
@@ -39,6 +40,12 @@ namespace chara2img.Models
         {
             get => _inputType;
             set { _inputType = value; OnPropertyChanged(); }
+        }
+
+        public string VariableHint
+        {
+            get => _variableHint;
+            set { _variableHint = value; OnPropertyChanged(); }
         }
 
         public event PropertyChangedEventHandler? PropertyChanged;

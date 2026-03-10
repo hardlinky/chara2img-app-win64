@@ -52,10 +52,28 @@
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
                         <StackPanel Margin="0,0,0,15">
-                            <TextBlock Text="{Binding DisplayName}" 
-                                       FontWeight="SemiBold" 
-                                       Margin="0,0,0,5" 
-                                       Foreground="{DynamicResource TextBrush}"/>
+                            <!-- Label with Variable Hint -->
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,5">
+                                <TextBlock Text="{Binding DisplayName}" 
+                                           FontWeight="SemiBold" 
+                                           Foreground="{DynamicResource TextBrush}"/>
+                                <TextBlock Text="{Binding VariableHint}" 
+                                           FontStyle="Italic" 
+                                           FontSize="11"
+                                           Foreground="#888888"
+                                           Margin="8,0,0,0"
+                                           VerticalAlignment="Center">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding VariableHint}" Value="">
+                                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </StackPanel>
 
                             <!-- Single Line Text Input -->
                             <TextBox Text="{Binding Value, UpdateSourceTrigger=PropertyChanged}" 
