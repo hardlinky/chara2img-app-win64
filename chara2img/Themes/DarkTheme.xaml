@@ -247,6 +247,16 @@
         <Setter Property="Padding" Value="10"/>
     </Style>
     
+    <!-- ToolTip Style -->
+    <Style TargetType="ToolTip">
+        <Setter Property="Background" Value="{StaticResource ControlBackgroundBrush}"/>
+        <Setter Property="Foreground" Value="{StaticResource TextBrush}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="Padding" Value="8,4"/>
+        <Setter Property="FontSize" Value="12"/>
+    </Style>
+    
     <!-- Border Style -->
     <Style TargetType="Border">
         <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}"/>

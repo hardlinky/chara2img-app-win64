@@ -273,6 +273,8 @@ namespace chara2img.ViewModels
 
         public ICommand AddLoraCommand { get; }
         public ICommand RemoveLoraCommand { get; }
+        
+        public ICommand CopyToClipboardCommand { get; }
 
         public double ImageZoom
         {
@@ -335,6 +337,8 @@ namespace chara2img.ViewModels
 
             AddLoraCommand = new RelayCommand<object>(AddLora);
             RemoveLoraCommand = new RelayCommand<LoraItem>(RemoveLora, item => item != null);
+            
+            CopyToClipboardCommand = new RelayCommand<string>(CopyToClipboard, text => !string.IsNullOrEmpty(text));
 
             // Load settings
             _settings = AppSettings.Load();
@@ -1522,6 +1526,21 @@ namespace chara2img.ViewModels
                         return;
                     }
                 }
+            }
+        }
+
+        private void CopyToClipboard(string? text)
+        {
+            if (string.IsNullOrEmpty(text)) return;
+
+            try
+            {
+                Clipboard.SetText(text);
+                StatusMessage = $"Copied to clipboard: {text}";
+            }
+            catch (Exception ex)
+            {
+                StatusMessage = $"Failed to copy to clipboard: {ex.Message}";
             }
         }
 

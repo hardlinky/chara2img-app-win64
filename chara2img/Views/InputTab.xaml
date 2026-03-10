@@ -57,21 +57,32 @@
                                 <TextBlock Text="{Binding DisplayName}" 
                                            FontWeight="SemiBold" 
                                            Foreground="{DynamicResource TextBrush}"/>
-                                <TextBlock Text="{Binding VariableHint}" 
-                                           FontStyle="Italic" 
+                                <TextBlock FontStyle="Italic" 
                                            FontSize="11"
-                                           Foreground="#888888"
+                                           Foreground="#4A90E2"
                                            Margin="8,0,0,0"
-                                           VerticalAlignment="Center">
+                                           VerticalAlignment="Center"
+                                           Cursor="Hand"
+                                           ToolTip="Click to copy to clipboard">
                                     <TextBlock.Style>
                                         <Style TargetType="TextBlock">
                                             <Style.Triggers>
                                                 <DataTrigger Binding="{Binding VariableHint}" Value="">
                                                     <Setter Property="Visibility" Value="Collapsed"/>
                                                 </DataTrigger>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter Property="TextDecorations" Value="Underline"/>
+                                                    <Setter Property="Foreground" Value="#2171D6"/>
+                                                </Trigger>
                                             </Style.Triggers>
                                         </Style>
                                     </TextBlock.Style>
+                                    <TextBlock.InputBindings>
+                                        <MouseBinding MouseAction="LeftClick" 
+                                                      Command="{Binding DataContext.CopyToClipboardCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                      CommandParameter="{Binding VariableHint}"/>
+                                    </TextBlock.InputBindings>
+                                    <Run Text="{Binding VariableHint, Mode=OneWay}"/>
                                 </TextBlock>
                             </StackPanel>
 
