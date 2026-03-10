@@ -11,6 +11,8 @@ namespace chara2img.Models
         private string _displayName = "";
         private string _inputType = "";
         private string _variableHint = "";
+        private string _namedVariableHint = "";
+        private bool _hasValidationError;
 
         public string NodeId
         {
@@ -46,6 +48,18 @@ namespace chara2img.Models
         {
             get => _variableHint;
             set { _variableHint = value; OnPropertyChanged(); }
+        }
+
+        public string NamedVariableHint
+        {
+            get => _namedVariableHint;
+            set { _namedVariableHint = value; OnPropertyChanged(); }
+        }
+
+        public bool HasValidationError
+        {
+            get => _hasValidationError;
+            set { _hasValidationError = value; OnPropertyChanged(); }
         }
 
         public event PropertyChangedEventHandler? PropertyChanged;

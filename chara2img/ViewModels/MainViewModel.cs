@@ -275,6 +275,7 @@ namespace chara2img.ViewModels
         public ICommand RemoveLoraCommand { get; }
         
         public ICommand CopyToClipboardCommand { get; }
+        public ICommand UpdateNamedVariableHintsCommand { get; }
 
         public double ImageZoom
         {
@@ -339,6 +340,7 @@ namespace chara2img.ViewModels
             RemoveLoraCommand = new RelayCommand<LoraItem>(RemoveLora, item => item != null);
             
             CopyToClipboardCommand = new RelayCommand<string>(CopyToClipboard, text => !string.IsNullOrEmpty(text));
+            UpdateNamedVariableHintsCommand = new RelayCommand<string>(UpdateNamedVariableHints);
 
             // Load settings
             _settings = AppSettings.Load();
@@ -1159,6 +1161,11 @@ namespace chara2img.ViewModels
             // Update categories and build view models
             UpdateCategoriesFromInputs();
             BuildCategoryViewModels();
+            
+            // Initialize named variable hints for Character, Costume, and Character Pose categories
+            UpdateNamedVariableHints("Character");
+            UpdateNamedVariableHints("Costume");
+            UpdateNamedVariableHints("Character Pose");
         }
 
         private void RestoreLastInputValues()
@@ -1541,6 +1548,245 @@ namespace chara2img.ViewModels
             catch (Exception ex)
             {
                 StatusMessage = $"Failed to copy to clipboard: {ex.Message}";
+            }
+        }
+
+        private void UpdateNamedVariableHints(string? category)
+        {
+            if (string.IsNullOrEmpty(category)) return;
+            if (!WorkflowInputs.ContainsKey(category)) return;
+
+            // Only update for Character, Costume, and Character Pose categories
+            if (category != "Character" && category != "Costume" && category != "Character Pose") return;
+
+            var inputs = WorkflowInputs[category];
+            
+            // Find the Name field
+            var nameInput = inputs.FirstOrDefault(i => i.DisplayName.Equals("Name", StringComparison.OrdinalIgnoreCase));
+            if (nameInput is not TextInput textNameInput) return;
+
+            var nameValue = textNameInput.Value?.Trim();
+            
+            if (string.IsNullOrEmpty(nameValue)) 
+            {
+                // Clear all hints in this category (empty name is invalid)
+                foreach (var input in inputs)
+                {
+                    input.VariableHint = "";
+                    input.NamedVariableHint = "";
+                }
+                ValidateUniqueNames();
+                return;
+            }
+
+            // Validate that name only contains letters, numbers, and underscores
+            bool isValidName = nameValue.All(c => char.IsLetterOrDigit(c) || c == '_');
+            if (!isValidName)
+            {
+                // Clear all hints in this category if name is invalid
+                foreach (var input in inputs)
+                {
+                    input.VariableHint = "";
+                    input.NamedVariableHint = "";
+                }
+                ValidateUniqueNames();
+                return;
+            }
+
+            // Generate prefix from category
+            var prefix = category switch
+            {
+                "Character" => "Character",
+                "Costume" => "Costume",
+                "Character Pose" => "CharaPose",
+                _ => null
+            };
+
+            if (prefix == null) return;
+
+            // Update all inputs in this category except Name
+            foreach (var input in inputs)
+            {
+                if (input.DisplayName.Equals("Name", StringComparison.OrdinalIgnoreCase))
+                {
+                    input.NamedVariableHint = "";
+                    continue;
+                }
+
+                // Generate variable suffix from DisplayName
+                var variableSuffix = new StringBuilder();
+                foreach (var c in input.DisplayName)
+                {
+                    if (char.IsLetterOrDigit(c))
+                    {
+                        variableSuffix.Append(c);
+                    }
+                }
+
+                if (variableSuffix.Length > 0)
+                {
+                    input.NamedVariableHint = $"{{{nameValue}_{variableSuffix}}}";
+                }
+                else
+                {
+                    input.NamedVariableHint = "";
+                }
+            }
+            
+            // Validate unique names after updating hints
+            ValidateUniqueNames();
+        }
+
+        private void ValidateUniqueNames()
+        {
+            // Only validate for Character, Costume, and Character Pose categories
+            var categoriesToValidate = new[] { "Character", "Costume", "Character Pose" };
+            
+            // Collect all Name fields with valid values
+            var nameFields = new List<(string Category, TextInput Input, string Value)>();
+            
+            // Track categories with invalid names (including empty names)
+            var categoriesWithInvalidNames = new HashSet<string>();
+            
+            foreach (var category in categoriesToValidate)
+            {
+                if (!WorkflowInputs.ContainsKey(category)) continue;
+                
+                var nameInput = WorkflowInputs[category]
+                    .FirstOrDefault(i => i.DisplayName.Equals("Name", StringComparison.OrdinalIgnoreCase));
+                
+                if (nameInput is TextInput textInput)
+                {
+                    var value = textInput.Value ?? "";
+                    
+                    // Empty name is invalid
+                    if (string.IsNullOrEmpty(value))
+                    {
+                        categoriesWithInvalidNames.Add(category);
+                    }
+                    else
+                    {
+                        // Check if name contains ONLY letters, numbers, and underscores
+                        bool isValid = value.All(c => char.IsLetterOrDigit(c) || c == '_');
+                        
+                        if (isValid)
+                        {
+                            nameFields.Add((category, textInput, value));
+                        }
+                        else
+                        {
+                            categoriesWithInvalidNames.Add(category);
+                        }
+                    }
+                }
+            }
+            
+            // Clear all validation errors first
+            foreach (var category in categoriesToValidate)
+            {
+                if (!WorkflowInputs.ContainsKey(category)) continue;
+                
+                var nameInput = WorkflowInputs[category]
+                    .FirstOrDefault(i => i.DisplayName.Equals("Name", StringComparison.OrdinalIgnoreCase));
+                
+                if (nameInput != null)
+                {
+                    nameInput.HasValidationError = false;
+                }
+            }
+            
+            // Find duplicates and mark them
+            var categoriesWithDuplicates = new HashSet<string>();
+            
+            for (int i = 0; i < nameFields.Count; i++)
+            {
+                for (int j = i + 1; j < nameFields.Count; j++)
+                {
+                    if (nameFields[i].Value.Equals(nameFields[j].Value, StringComparison.OrdinalIgnoreCase))
+                    {
+                        nameFields[i].Input.HasValidationError = true;
+                        nameFields[j].Input.HasValidationError = true;
+                        categoriesWithDuplicates.Add(nameFields[i].Category);
+                        categoriesWithDuplicates.Add(nameFields[j].Category);
+                    }
+                }
+            }
+            
+            // Mark invalid names with red border
+            foreach (var category in categoriesWithInvalidNames)
+            {
+                if (!WorkflowInputs.ContainsKey(category)) continue;
+                
+                var nameInput = WorkflowInputs[category]
+                    .FirstOrDefault(i => i.DisplayName.Equals("Name", StringComparison.OrdinalIgnoreCase));
+                
+                if (nameInput != null)
+                {
+                    nameInput.HasValidationError = true;
+                }
+            }
+            
+            // Combine all problematic categories
+            var categoriesToHideHints = new HashSet<string>(categoriesWithDuplicates);
+            categoriesToHideHints.UnionWith(categoriesWithInvalidNames);
+            
+            // Hide ALL hints in problematic categories
+            foreach (var category in categoriesToHideHints)
+            {
+                if (!WorkflowInputs.ContainsKey(category)) continue;
+                
+                var inputs = WorkflowInputs[category];
+                foreach (var input in inputs)
+                {
+                    input.VariableHint = "";
+                    input.NamedVariableHint = "";
+                }
+            }
+            
+            // Restore VariableHint for valid categories
+            foreach (var category in categoriesToValidate)
+            {
+                if (categoriesToHideHints.Contains(category)) continue;
+                if (!WorkflowInputs.ContainsKey(category)) continue;
+                
+                var inputs = WorkflowInputs[category];
+                
+                var prefix = category switch
+                {
+                    "Character" => "Character",
+                    "Costume" => "Costume",
+                    "Character Pose" => "CharaPose",
+                    _ => null
+                };
+                
+                if (prefix == null) continue;
+                
+                foreach (var input in inputs)
+                {
+                    if (input.DisplayName.Equals("Name", StringComparison.OrdinalIgnoreCase))
+                    {
+                        input.VariableHint = "";
+                        continue;
+                    }
+                    
+                    var variableSuffix = new StringBuilder();
+                    foreach (var c in input.DisplayName)
+                    {
+                        if (char.IsLetterOrDigit(c))
+                        {
+                            variableSuffix.Append(c);
+                        }
+                    }
+                    
+                    if (variableSuffix.Length > 0)
+                    {
+                        input.VariableHint = $"{{{prefix}_{variableSuffix}}}";
+                    }
+                    else
+                    {
+                        input.VariableHint = "";
+                    }
+                }
             }
         }
 

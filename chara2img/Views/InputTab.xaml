@@ -57,6 +57,7 @@
                                 <TextBlock Text="{Binding DisplayName}" 
                                            FontWeight="SemiBold" 
                                            Foreground="{DynamicResource TextBrush}"/>
+                                <!-- Primary Variable Hint -->
                                 <TextBlock FontStyle="Italic" 
                                            FontSize="11"
                                            Foreground="#4A90E2"
@@ -84,6 +85,34 @@
                                     </TextBlock.InputBindings>
                                     <Run Text="{Binding VariableHint, Mode=OneWay}"/>
                                 </TextBlock>
+                                <!-- Named Variable Hint (alias) - Changed to blue -->
+                                <TextBlock FontStyle="Italic" 
+                                           FontSize="11"
+                                           Foreground="#4A90E2"
+                                           Margin="8,0,0,0"
+                                           VerticalAlignment="Center"
+                                           Cursor="Hand"
+                                           ToolTip="Click to copy to clipboard (alias based on Name field)">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding NamedVariableHint}" Value="">
+                                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                                </DataTrigger>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter Property="TextDecorations" Value="Underline"/>
+                                                    <Setter Property="Foreground" Value="#2171D6"/>
+                                                </Trigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                    <TextBlock.InputBindings>
+                                        <MouseBinding MouseAction="LeftClick" 
+                                                      Command="{Binding DataContext.CopyToClipboardCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                      CommandParameter="{Binding NamedVariableHint}"/>
+                                    </TextBlock.InputBindings>
+                                    <Run Text="{Binding NamedVariableHint, Mode=OneWay}"/>
+                                </TextBlock>
                             </StackPanel>
 
                             <!-- Single Line Text Input -->
@@ -94,7 +123,21 @@
                                      MinLines="1"
                                      MaxLines="10"
                                      VerticalScrollBarVisibility="Auto"
-                                     Visibility="{Binding InputType, Converter={StaticResource InputTypeToVisibilityConverter}, ConverterParameter=text}"/>
+                                     Visibility="{Binding InputType, Converter={StaticResource InputTypeToVisibilityConverter}, ConverterParameter=text}"
+                                     LostFocus="NameField_LostFocus"
+                                     TextChanged="NameField_TextChanged">
+                                <TextBox.Style>
+                                    <Style TargetType="TextBox" BasedOn="{StaticResource {x:Type TextBox}}">
+                                        <Style.Triggers>
+                                            <!-- Red border for validation errors -->
+                                            <DataTrigger Binding="{Binding HasValidationError}" Value="True">
+                                                <Setter Property="BorderBrush" Value="#F44336"/>
+                                                <Setter Property="BorderThickness" Value="2"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBox.Style>
+                            </TextBox>
 
                             <!-- Multiline Text Input -->
                             <TextBox Text="{Binding Value, UpdateSourceTrigger=PropertyChanged}" 
