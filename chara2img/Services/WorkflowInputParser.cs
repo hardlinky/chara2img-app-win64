@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using chara2img.Models;
 
 namespace chara2img.Services
@@ -19,13 +20,14 @@ namespace chara2img.Services
                 var workflow = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(workflowJson);
                 if (workflow == null) return result;
 
+                // First pass: collect all inputs
                 foreach (var (nodeId, node) in workflow)
                 {
                     if (!node.TryGetProperty("_meta", out var meta)) continue;
                     if (!meta.TryGetProperty("title", out var titleElement)) continue;
 
                     var title = titleElement.GetString();
-                    if (string.IsNullOrEmpty(title) || !title.StartsWith("[Input]")) continue;
+                    if (string.IsNullOrEmpty(title) || !IsInputNode(title)) continue;
 
                     var input = ParseNode(nodeId, title, node);
                     if (input != null)
@@ -37,6 +39,18 @@ namespace chara2img.Services
                         result[input.Category].Add(input);
                     }
                 }
+
+                // Second pass: sort inputs by Order within each category and create new collections
+                foreach (var categoryName in result.Keys.ToList())
+                {
+                    var sortedInputs = result[categoryName]
+                        .OrderBy(i => i.Order)
+                        .ThenBy(i => i.DisplayName)
+                        .ToList();
+                    
+                    // Replace with a new sorted collection
+                    result[categoryName] = new ObservableCollection<WorkflowInput>(sortedInputs);
+                }
             }
             catch
             {
@@ -46,12 +60,33 @@ namespace chara2img.Services
             return result;
         }
 
+        private static bool IsInputNode(string title)
+        {
+            // Match [Input] or [Input#] where # is a number
+            return title.StartsWith("[Input]") || Regex.IsMatch(title, @"^\[Input\d+\]");
+        }
+
+        private static int ExtractOrder(string title)
+        {
+            // Extract the number from [Input#] format
+            // Returns int.MaxValue for plain [Input] (so they appear at the end)
+            var match = Regex.Match(title, @"^\[Input(\d+)\]");
+            if (match.Success && int.TryParse(match.Groups[1].Value, out var order))
+            {
+                return order;
+            }
+            return int.MaxValue; // No number means it goes to the end
+        }
+
         private static WorkflowInput? ParseNode(string nodeId, string title, JsonElement node)
         {
             if (!node.TryGetProperty("inputs", out var inputs)) return null;
 
-            // Parse title: "[Input] Category.DisplayName"
-            var titleContent = title.Replace("[Input]", "").Trim();
+            // Extract order from title (e.g., [Input0], [Input1], [Input])
+            var order = ExtractOrder(title);
+
+            // Parse title: "[Input] Category.DisplayName" or "[Input#] Category.DisplayName"
+            var titleContent = Regex.Replace(title, @"^\[Input\d*\]", "").Trim();
             var parts = titleContent.Split('.');
             
             if (parts.Length < 2) return null;
@@ -65,7 +100,13 @@ namespace chara2img.Services
 
             var classType = classTypeElement.GetString() ?? "";
 
-            return InferInputFromNodeType(nodeId, title, category, displayName, classType, inputs);
+            var input = InferInputFromNodeType(nodeId, title, category, displayName, classType, inputs);
+            if (input != null)
+            {
+                input.Order = order;
+            }
+
+            return input;
         }
 
         private static string GenerateVariableHint(string category, string displayName)
@@ -113,6 +154,7 @@ namespace chara2img.Services
             {
                 case "CR Text":
                 case "StringFunction|pysssss":
+                case "Text Multiline":
                     {
                         // Multiline text input
                         var value = inputs.TryGetProperty("text", out var text) ? text.GetString() ?? "" : "";
@@ -130,6 +172,7 @@ namespace chara2img.Services
                     }
 
                 case "PrimitiveNode|pysssss":
+                case "PrimitiveString":
                     {
                         // Check the control_after_generate to determine type
                         if (inputs.TryGetProperty("value", out var valueElement))

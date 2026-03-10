@@ -1,3 +1,4 @@
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 
@@ -13,6 +14,7 @@ namespace chara2img.Models
         private string _variableHint = "";
         private string _namedVariableHint = "";
         private bool _hasValidationError;
+        private int _order = int.MaxValue; // Default to end of list for [Input] without number
 
         public string NodeId
         {
@@ -60,6 +62,12 @@ namespace chara2img.Models
         {
             get => _hasValidationError;
             set { _hasValidationError = value; OnPropertyChanged(); }
+        }
+
+        public int Order
+        {
+            get => _order;
+            set { _order = value; OnPropertyChanged(); }
         }
 
         public event PropertyChangedEventHandler? PropertyChanged;
@@ -113,12 +121,30 @@ namespace chara2img.Models
         }
     }
 
+    public class BooleanInput : WorkflowInput
+    {
+        private bool _value;
+        private string _inputKey = "";
+
+        public string InputKey
+        {
+            get => _inputKey;
+            set { _inputKey = value; OnPropertyChanged(); }
+        }
+
+        public bool Value
+        {
+            get => _value;
+            set { _value = value; OnPropertyChanged(); }
+        }
+    }
+
     public class NumberPairInput : WorkflowInput
     {
-        private int _value1;
-        private int _value2;
         private string _inputKey1 = "";
         private string _inputKey2 = "";
+        private int _value1;
+        private int _value2;
         private string _label1 = "";
         private string _label2 = "";
 
@@ -134,18 +160,6 @@ namespace chara2img.Models
             set { _inputKey2 = value; OnPropertyChanged(); }
         }
 
-        public string Label1
-        {
-            get => _label1;
-            set { _label1 = value; OnPropertyChanged(); }
-        }
-
-        public string Label2
-        {
-            get => _label2;
-            set { _label2 = value; OnPropertyChanged(); }
-        }
-
         public int Value1
         {
             get => _value1;
@@ -156,6 +170,18 @@ namespace chara2img.Models
         {
             get => _value2;
             set { _value2 = value; OnPropertyChanged(); }
+        }
+
+        public string Label1
+        {
+            get => _label1;
+            set { _label1 = value; OnPropertyChanged(); }
+        }
+
+        public string Label2
+        {
+            get => _label2;
+            set { _label2 = value; OnPropertyChanged(); }
         }
     }
 
@@ -193,30 +219,12 @@ namespace chara2img.Models
 
     public class LoraListInput : WorkflowInput
     {
-        private System.Collections.ObjectModel.ObservableCollection<LoraItem> _loras = new();
+        private ObservableCollection<LoraItem> _loras = new();
 
-        public System.Collections.ObjectModel.ObservableCollection<LoraItem> Loras
+        public ObservableCollection<LoraItem> Loras
         {
             get => _loras;
             set { _loras = value; OnPropertyChanged(); }
-        }
-    }
-
-    public class BooleanInput : WorkflowInput
-    {
-        private bool _value;
-        private string _inputKey = "";
-
-        public string InputKey
-        {
-            get => _inputKey;
-            set { _inputKey = value; OnPropertyChanged(); }
-        }
-
-        public bool Value
-        {
-            get => _value;
-            set { _value = value; OnPropertyChanged(); }
         }
     }
 }
