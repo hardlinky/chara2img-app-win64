@@ -129,6 +129,8 @@ namespace chara2img.ViewModels
             }
         }
 
+        private bool _isInitialLoad = true;
+
         public string WorkflowJson
         {
             get => _workflowJson;
@@ -137,7 +139,7 @@ namespace chara2img.ViewModels
                 _workflowJson = value;
                 OnPropertyChanged();
                 OnPropertyChanged(nameof(HasWorkflow));
-                ParseWorkflowInputs(); // Add this line
+                ParseWorkflowInputs();
             }
         }
 
@@ -1143,8 +1145,12 @@ namespace chara2img.ViewModels
 
             WorkflowInputs = WorkflowInputParser.ParseWorkflow(WorkflowJson);
             
-            // Try to restore last input values for this workflow
-            RestoreLastInputValues();
+            // Only restore last input values on initial app load, not when manually loading a workflow
+            if (_isInitialLoad)
+            {
+                RestoreLastInputValues();
+                _isInitialLoad = false; // After first load, don't auto-restore anymore
+            }
             
             // Update categories and build view models
             UpdateCategoriesFromInputs();
@@ -1158,7 +1164,6 @@ namespace chara2img.ViewModels
 
             try
             {
-                // Deserialize the saved workflow inputs
                 var savedInputs = JsonSerializer.Deserialize<Dictionary<string, ObservableCollection<WorkflowInput>>>(
                     _settings.LastInputValuesJson,
                     new JsonSerializerOptions 
@@ -1182,7 +1187,6 @@ namespace chara2img.ViewModels
                     {
                         if (savedInput == null) continue;
 
-                        // Find matching input by NodeId and DisplayName
                         var matchingInput = currentInputs.FirstOrDefault(i => 
                             i.NodeId == savedInput.NodeId && i.DisplayName == savedInput.DisplayName);
 
@@ -1228,7 +1232,6 @@ namespace chara2img.ViewModels
         {
             try
             {
-                // Serialize current workflow inputs
                 var inputsJson = JsonSerializer.Serialize(
                     WorkflowInputs,
                     new JsonSerializerOptions 
