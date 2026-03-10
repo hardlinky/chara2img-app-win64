@@ -60,6 +60,11 @@
                             <!-- Single Line Text Input -->
                             <TextBox Text="{Binding Value, UpdateSourceTrigger=PropertyChanged}" 
                                      Padding="5"
+                                     AcceptsReturn="True"
+                                     TextWrapping="Wrap"
+                                     MinLines="1"
+                                     MaxLines="10"
+                                     VerticalScrollBarVisibility="Auto"
                                      Visibility="{Binding InputType, Converter={StaticResource InputTypeToVisibilityConverter}, ConverterParameter=text}"/>
 
                             <!-- Multiline Text Input -->
