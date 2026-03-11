@@ -21,37 +21,6 @@
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <!-- Tip Bar with Image Counter -->
-        <Grid Grid.Row="0" Margin="0,0,0,10">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="Auto"/>
-            </Grid.ColumnDefinitions>
-            
-            <TextBlock Grid.Column="0"
-                       Text="💡 Tip: Use mouse wheel to zoom, click and drag to pan, arrow keys to navigate" 
-                       Foreground="{DynamicResource SecondaryTextBrush}"
-                       VerticalAlignment="Center"/>
-            
-            <TextBlock Grid.Column="1"
-                       Foreground="{DynamicResource SecondaryTextBrush}"
-                       VerticalAlignment="Center"
-                       FontWeight="SemiBold"
-                       Visibility="{Binding IsGalleryView, Converter={StaticResource InverseBoolToVisibilityConverter}}">
-                <Run Text="Image "/>
-                <Run>
-                    <Run.Text>
-                        <MultiBinding Converter="{StaticResource ImageIndexConverter}">
-                            <Binding Path="CurrentImage" Mode="OneWay"/>
-                            <Binding Path="CurrentImages" Mode="OneWay"/>
-                        </MultiBinding>
-                    </Run.Text>
-                </Run>
-                <Run Text=" of "/>
-                <Run Text="{Binding CurrentImages.Count, Mode=OneWay}"/>
-            </TextBlock>
-        </Grid>
-
         <!-- Gallery View -->
         <Grid Grid.Row="1" Visibility="{Binding IsGalleryView, Converter={StaticResource BoolToVisibilityConverter}}">
             <ScrollViewer VerticalScrollBarVisibility="Auto" Background="{DynamicResource WindowBackgroundBrush}">
@@ -96,18 +65,37 @@
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
 
-            <StackPanel Grid.Row="0" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,0,0,10">
-                <Button Content="💾 Save As..." 
-                        Command="{Binding SaveImageAsCommand}"
-                        Padding="15,8"
-                        FontSize="14"
-                        Margin="0,0,10,0"/>
-                <Button Content="✕ Close" 
-                        Command="{Binding CloseImageCommand}"
-                        Padding="15,8"
-                        FontSize="14"
-                        FontWeight="Bold"/>
-            </StackPanel>
+            <!-- Top Bar with Tip and Buttons -->
+            <Grid Grid.Row="0" Margin="0,0,0,10">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                
+                <!-- Navigation Tip (Bottom Left of Top Bar) -->
+                <TextBlock Grid.Column="0"
+                           Text="💡 Tip: Use mouse wheel to zoom, click and drag to pan, arrow keys to navigate" 
+                           Foreground="{DynamicResource SecondaryTextBrush}"
+                           VerticalAlignment="Bottom"
+                           HorizontalAlignment="Left"/>
+                
+                <!-- Buttons (Top Right) -->
+                <StackPanel Grid.Column="1" 
+                            Orientation="Horizontal" 
+                            HorizontalAlignment="Right"
+                            VerticalAlignment="Top">
+                    <Button Content="💾 Save As..." 
+                            Command="{Binding SaveImageAsCommand}"
+                            Padding="15,8"
+                            FontSize="14"
+                            Margin="0,0,10,0"/>
+                    <Button Content="✕ Close" 
+                            Command="{Binding CloseImageCommand}"
+                            Padding="15,8"
+                            FontSize="14"
+                            FontWeight="Bold"/>
+                </StackPanel>
+            </Grid>
 
             <Border Grid.Row="1" 
                     BorderBrush="{DynamicResource BorderBrush}" 
@@ -136,5 +124,24 @@
                 </ScrollViewer>
             </Border>
         </Grid>
+
+        <!-- Image Counter (Top Right - Above Everything) -->
+        <TextBlock Grid.Row="0"
+                   HorizontalAlignment="Right"
+                   VerticalAlignment="Center"
+                   Foreground="{DynamicResource SecondaryTextBrush}"
+                   FontWeight="SemiBold"
+                   Margin="0,0,0,10"
+                   Visibility="{Binding IsGalleryView, Converter={StaticResource InverseBoolToVisibilityConverter}}">
+            <Run>
+                <Run.Text>
+                    <MultiBinding Converter="{StaticResource ImageIndexConverter}">
+                        <Binding Path="CurrentImage" Mode="OneWay"/>
+                        <Binding Path="CurrentImages" Mode="OneWay"/>
+                        <Binding Path="SelectedJob" Mode="OneWay"/>
+                    </MultiBinding>
+                </Run.Text>
+            </Run>
+        </TextBlock>
     </Grid>
 </UserControl>

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using chara2img.Models;
+using System;
 using System.Collections;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -198,12 +199,25 @@ namespace chara2img
     {
         public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture)
         {
-            if (values.Length == 2 && 
+            if (values.Length == 3 && 
                 values[0] is BitmapImage currentImage && 
-                values[1] is ObservableCollection<BitmapImage> images)
+                values[1] is ObservableCollection<BitmapImage> images &&
+                values[2] is RunpodJob selectedJob)
             {
                 var index = images.IndexOf(currentImage);
-                return index >= 0 ? (index + 1).ToString() : "-";
+                if (index >= 0)
+                {
+                    // Get the current image full path
+                    string filePath = "-";
+                    if (selectedJob?.ImageFilePaths != null && 
+                        index < selectedJob.ImageFilePaths.Count)
+                    {
+                        filePath = selectedJob.ImageFilePaths[index];
+                    }
+                    
+                    return $"{filePath} {index + 1}/{images.Count}";
+                }
+                return "-";
             }
             return "-";
         }

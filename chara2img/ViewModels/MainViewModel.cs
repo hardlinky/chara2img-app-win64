@@ -1440,18 +1440,20 @@ namespace chara2img.ViewModels
             var currentIndex = Jobs.IndexOf(SelectedJob!);
             var wasInPreviewMode = !IsGalleryView;
             
-            // Find the previous completed job (going up in the list)
+            // Find the previous completed job with images (going up in the list)
             int previousIndex = currentIndex - 1;
             if (previousIndex < 0) previousIndex = Jobs.Count - 1; // Start from bottom
             
-            // Search for the previous completed job, wrapping around if needed
+            // Search for the previous completed job with images, wrapping around if needed
             int searchCount = 0;
             while (searchCount < Jobs.Count)
             {
-                if (Jobs[previousIndex].Status == "completed")
+                var job = Jobs[previousIndex];
+                if (job.Status == "completed" && 
+                    job.ImageFilePaths != null && 
+                    job.ImageFilePaths.Count > 0)
                 {
-                    var previousJob = Jobs[previousIndex];
-                    SelectedJob = previousJob;
+                    SelectedJob = job;
                     
                     // If we were in preview mode, open the first image of the new job
                     if (wasInPreviewMode && CurrentImages.Count > 0)
@@ -1476,18 +1478,20 @@ namespace chara2img.ViewModels
             var currentIndex = Jobs.IndexOf(SelectedJob!);
             var wasInPreviewMode = !IsGalleryView;
             
-            // Find the next completed job (going down in the list)
+            // Find the next completed job with images (going down in the list)
             int nextIndex = currentIndex + 1;
             if (nextIndex >= Jobs.Count) nextIndex = 0; // Start from top
             
-            // Search for the next completed job, wrapping around if needed
+            // Search for the next completed job with images, wrapping around if needed
             int searchCount = 0;
             while (searchCount < Jobs.Count)
             {
-                if (Jobs[nextIndex].Status == "completed")
+                var job = Jobs[nextIndex];
+                if (job.Status == "completed" && 
+                    job.ImageFilePaths != null && 
+                    job.ImageFilePaths.Count > 0)
                 {
-                    var nextJob = Jobs[nextIndex];
-                    SelectedJob = nextJob;
+                    SelectedJob = job;
                     
                     // If we were in preview mode, open the first image of the new job
                     if (wasInPreviewMode && CurrentImages.Count > 0)
