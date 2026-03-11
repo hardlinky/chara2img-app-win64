@@ -222,14 +222,34 @@ namespace chara2img.Views
         {
             if (Keyboard.Modifiers == ModifierKeys.Control || OutputImage.Source != null)
             {
+                // Get mouse position relative to the ScrollViewer
+                var mousePos = e.GetPosition(ImageScrollViewer);
+                
+                // Calculate the point in the image that's under the cursor (before zoom)
+                var pointInImage = new Point(
+                    (mousePos.X + ImageScrollViewer.HorizontalOffset) / ImageScaleTransform.ScaleX,
+                    (mousePos.Y + ImageScrollViewer.VerticalOffset) / ImageScaleTransform.ScaleY
+                );
+
+                // Calculate new scale
                 double zoom = e.Delta > 0 ? 0.1 : -0.1;
-                double newScale = ImageScaleTransform.ScaleX + zoom;
+                double oldScale = ImageScaleTransform.ScaleX;
+                double newScale = oldScale + zoom;
 
                 // Limit zoom between 0.1x and 10x
                 newScale = Math.Max(0.1, Math.Min(10, newScale));
 
+                // Apply the new scale
                 ImageScaleTransform.ScaleX = newScale;
                 ImageScaleTransform.ScaleY = newScale;
+
+                // Calculate new scroll offsets to keep the same point under the cursor
+                var newOffsetX = pointInImage.X * newScale - mousePos.X;
+                var newOffsetY = pointInImage.Y * newScale - mousePos.Y;
+
+                // Apply new scroll offsets
+                ImageScrollViewer.ScrollToHorizontalOffset(newOffsetX);
+                ImageScrollViewer.ScrollToVerticalOffset(newOffsetY);
 
                 e.Handled = true;
             }
@@ -239,14 +259,34 @@ namespace chara2img.Views
         {
             if (FullscreenImage.Source != null)
             {
+                // Get mouse position relative to the ScrollViewer
+                var mousePos = e.GetPosition(FullscreenScrollViewer);
+                
+                // Calculate the point in the image that's under the cursor (before zoom)
+                var pointInImage = new Point(
+                    (mousePos.X + FullscreenScrollViewer.HorizontalOffset) / FullscreenScaleTransform.ScaleX,
+                    (mousePos.Y + FullscreenScrollViewer.VerticalOffset) / FullscreenScaleTransform.ScaleY
+                );
+
+                // Calculate new scale
                 double zoom = e.Delta > 0 ? 0.1 : -0.1;
-                double newScale = FullscreenScaleTransform.ScaleX + zoom;
+                double oldScale = FullscreenScaleTransform.ScaleX;
+                double newScale = oldScale + zoom;
 
                 // Limit zoom between 0.1x and 10x
                 newScale = Math.Max(0.1, Math.Min(10, newScale));
 
+                // Apply the new scale
                 FullscreenScaleTransform.ScaleX = newScale;
                 FullscreenScaleTransform.ScaleY = newScale;
+
+                // Calculate new scroll offsets to keep the same point under the cursor
+                var newOffsetX = pointInImage.X * newScale - mousePos.X;
+                var newOffsetY = pointInImage.Y * newScale - mousePos.Y;
+
+                // Apply new scroll offsets
+                FullscreenScrollViewer.ScrollToHorizontalOffset(newOffsetX);
+                FullscreenScrollViewer.ScrollToVerticalOffset(newOffsetY);
 
                 e.Handled = true;
             }
