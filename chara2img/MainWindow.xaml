@@ -78,11 +78,13 @@
             <Grid.RowDefinitions>
                 <RowDefinition Height="32"/>
                 <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
 
             <!-- Custom Title Bar -->
             <Border Grid.Row="0" 
-                    Background="{DynamicResource ControlBackgroundBrush}">
+                    Background="{DynamicResource ControlBackgroundBrush}"
+                    MouseLeftButtonDown="TitleBar_MouseLeftButtonDown">
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
@@ -135,36 +137,62 @@
             </Border>
 
             <!-- Main Content -->
-            <Grid Grid.Row="1">
-                <TabControl Background="{DynamicResource ControlBackgroundBrush}"
-                            SelectedIndex="{Binding SelectedTabIndex}">
+            <TabControl Grid.Row="1"
+                        Background="{DynamicResource ControlBackgroundBrush}"
+                        SelectedIndex="{Binding SelectedTabIndex}">
 
-                    <!-- Workflow Tab -->
-                    <TabItem Header="Workflow">
-                        <views:WorkflowTab/>
-                    </TabItem>
+                <!-- Workflow Tab -->
+                <TabItem Header="Workflow">
+                    <views:WorkflowTab/>
+                </TabItem>
 
-                    <!-- Input Tab -->
-                    <TabItem Header="Input">
-                        <views:InputTab/>
-                    </TabItem>
+                <!-- Input Tab -->
+                <TabItem Header="Input">
+                    <views:InputTab/>
+                </TabItem>
 
-                    <!-- Run Tab -->
-                    <TabItem Header="Run">
-                        <views:RunTab/>
-                    </TabItem>
+                <!-- Run Tab -->
+                <TabItem Header="Run">
+                    <views:RunTab/>
+                </TabItem>
 
-                    <!-- Output Tab -->
-                    <TabItem Header="Output">
-                        <views:OutputTab/>
-                    </TabItem>
+                <!-- Output Tab -->
+                <TabItem Header="Output">
+                    <views:OutputTab/>
+                </TabItem>
 
-                    <!-- Settings Tab -->
-                    <TabItem Header="Settings">
-                        <views:SettingsTab/>
-                    </TabItem>
-                </TabControl>
-            </Grid>
+                <!-- Settings Tab -->
+                <TabItem Header="Settings">
+                    <views:SettingsTab/>
+                </TabItem>
+            </TabControl>
+
+            <!-- Active Job Statuses at Bottom (visible across all tabs) -->
+            <Border Grid.Row="2" 
+                    Background="{DynamicResource ControlBackgroundBrush}"
+                    BorderBrush="{DynamicResource BorderBrush}"
+                    BorderThickness="0,1,0,0"
+                    Padding="10,8"
+                    Visibility="{Binding ActiveJobStatuses.Count, Converter={StaticResource ZeroToVisibilityConverter}, ConverterParameter=Inverse}">
+                <StackPanel>
+                    <TextBlock Text="Active Jobs:" 
+                               FontWeight="SemiBold"
+                               Foreground="{DynamicResource TextBrush}"
+                               Margin="0,0,0,5"
+                               Visibility="{Binding ActiveJobStatuses.Count, Converter={StaticResource ZeroToVisibilityConverter}, ConverterParameter=Inverse}"/>
+                    <ItemsControl ItemsSource="{Binding ActiveJobStatuses}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding}" 
+                                           Foreground="{DynamicResource TextBrush}"
+                                           FontFamily="Consolas"
+                                           FontSize="11"
+                                           Margin="0,2"/>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </Border>
         </Grid>
     </Border>
 </Window>
