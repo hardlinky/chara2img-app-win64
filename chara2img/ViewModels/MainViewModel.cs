@@ -58,6 +58,23 @@ namespace chara2img.ViewModels
         // Add this new property for the pre-built category UI items
         private ObservableCollection<CategoryViewModel> _categoryViewModels = new();
 
+        private ObservableCollection<CategoryViewModel> _primaryViewModels = new();
+        private ObservableCollection<CategoryViewModel> _secondaryViewModels = new();
+
+        public ObservableCollection<CategoryViewModel> PrimaryViewModels
+        {
+            get => _primaryViewModels;
+            set { _primaryViewModels = value; OnPropertyChanged(); }
+        }
+
+        public ObservableCollection<CategoryViewModel> SecondaryViewModels
+        {
+            get => _secondaryViewModels;
+            set { _secondaryViewModels = value; OnPropertyChanged(); }
+        }
+
+        public bool HasSecondaryCategories => SecondaryViewModels.Count > 0;
+
         public ObservableCollection<CategoryViewModel> CategoryViewModels
         {
             get => _categoryViewModels;
@@ -270,6 +287,7 @@ namespace chara2img.ViewModels
         public ICommand MoveCategoryUpCommand { get; }
         public ICommand MoveCategoryDownCommand { get; }
         public ICommand ToggleCategoryCommand { get; }
+        public ICommand MoveCategoryToOtherViewCommand { get; }
 
         public ICommand AddLoraCommand { get; }
         public ICommand RemoveLoraCommand { get; }
@@ -345,6 +363,7 @@ namespace chara2img.ViewModels
             MoveCategoryUpCommand = new RelayCommand<CategoryInfo>(MoveCategoryUp, CanMoveCategoryUp);
             MoveCategoryDownCommand = new RelayCommand<CategoryInfo>(MoveCategoryDown, CanMoveCategoryDown);
             ToggleCategoryCommand = new RelayCommand<CategoryInfo>(ToggleCategory);
+            MoveCategoryToOtherViewCommand = new RelayCommand<CategoryInfo>(MoveCategoryToOtherView);
 
             AddLoraCommand = new RelayCommand<object>(AddLora);
             RemoveLoraCommand = new RelayCommand<LoraItem>(RemoveLora, item => item != null);
@@ -407,6 +426,31 @@ namespace chara2img.ViewModels
             OnPropertyChanged(nameof(SaveWorkflowWithJob));
             OnPropertyChanged(nameof(SelectedTheme));
             OnPropertyChanged(nameof(MaxPollingAttempts));
+        }
+
+        private void MoveCategoryToOtherView(CategoryInfo? category)
+        {
+            if (category == null) return;
+
+            // Toggle the view
+            category.ViewIndex = category.ViewIndex == 0 ? 1 : 0;
+
+            // After moving, check if we need to swap views
+            var primaryCategories = Categories.Where(c => c.ViewIndex == 0).ToList();
+            var secondaryCategories = Categories.Where(c => c.ViewIndex == 1).ToList();
+
+            // If primary is now empty but secondary has items, swap them all back to primary
+            if (primaryCategories.Count == 0 && secondaryCategories.Count > 0)
+            {
+                foreach (var cat in Categories)
+                {
+                    cat.ViewIndex = 0;
+                }
+            }
+
+            // Rebuild view models and save
+            BuildCategoryViewModels();
+            SaveCategoryPreferencesDebounced();
         }
 
         private void ToggleFullscreen()
@@ -1373,6 +1417,8 @@ namespace chara2img.ViewModels
         private void BuildCategoryViewModels()
         {
             CategoryViewModels.Clear();
+            PrimaryViewModels.Clear();
+            SecondaryViewModels.Clear();
 
             foreach (var category in Categories)
             {
@@ -1384,34 +1430,47 @@ namespace chara2img.ViewModels
                         Inputs = inputs
                     };
                     CategoryViewModels.Add(viewModel);
+
+                    // Add to appropriate view
+                    if (category.ViewIndex == 0)
+                    {
+                        PrimaryViewModels.Add(viewModel);
+                    }
+                    else
+                    {
+                        SecondaryViewModels.Add(viewModel);
+                    }
                 }
             }
+
+            OnPropertyChanged(nameof(HasSecondaryCategories));
         }
 
         private void UpdateCategoriesFromInputs()
         {
             // Get existing preferences
             var preferences = _settings.CategoryPreferences ?? new Dictionary<string, CategoryPreference>();
-            
+
             // Create category info for each category in WorkflowInputs
             var newCategories = new List<CategoryInfo>();
             int defaultOrder = 0;
-            
+
             foreach (var categoryKey in WorkflowInputs.Keys)
             {
                 var categoryInfo = new CategoryInfo
                 {
                     Name = categoryKey,
                     Order = preferences.ContainsKey(categoryKey) ? preferences[categoryKey].Order : defaultOrder++,
-                    IsCollapsed = preferences.ContainsKey(categoryKey) && preferences[categoryKey].IsCollapsed
+                    IsCollapsed = preferences.ContainsKey(categoryKey) && preferences[categoryKey].IsCollapsed,
+                    ViewIndex = preferences.ContainsKey(categoryKey) ? preferences[categoryKey].ViewIndex : 0
                 };
-                
+
                 newCategories.Add(categoryInfo);
             }
-            
+
             // Sort by order
             newCategories = newCategories.OrderBy(c => c.Order).ToList();
-            
+
             // Update the observable collection
             Categories.Clear();
             foreach (var cat in newCategories)
@@ -1419,7 +1478,6 @@ namespace chara2img.ViewModels
                 Categories.Add(cat);
             }
         }
-
         private bool CanMoveCategoryUp(CategoryInfo? category)
         {
             if (category == null) return false;
@@ -1481,20 +1539,20 @@ namespace chara2img.ViewModels
         private void SaveCategoryPreferences()
         {
             var preferences = new Dictionary<string, CategoryPreference>();
-    
+
             foreach (var category in Categories)
             {
                 preferences[category.Name] = new CategoryPreference
                 {
                     Order = category.Order,
-                    IsCollapsed = category.IsCollapsed
+                    IsCollapsed = category.IsCollapsed,
+                    ViewIndex = category.ViewIndex
                 };
             }
-    
+
             _settings.CategoryPreferences = preferences;
             _settings.Save();
         }
-
         private void SaveCategoryPreferencesDebounced()
         {
             lock (_saveLock)

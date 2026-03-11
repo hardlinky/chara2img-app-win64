@@ -66,5 +66,6 @@ namespace chara2img.Services
     {
         public int Order { get; set; }
         public bool IsCollapsed { get; set; }
+        public int ViewIndex { get; set; } // 0 = primary, 1 = secondary
     }
 }

@@ -4,6 +4,7 @@ using System.Collections;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Globalization;
+using System.Linq;
 using System.Windows;
 using System.Windows.Data;
 using System.Windows.Input;
@@ -246,6 +247,27 @@ namespace chara2img
                 }
             }
             return "Remove this job from the list";
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+    public class SecondaryColumnWidthConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            if (value is bool hasSecondary && hasSecondary)
+            {
+                if (parameter?.ToString() == "splitter")
+                {
+                    return new GridLength(5); // Splitter column: 5px
+                }
+                return new GridLength(1, GridUnitType.Star); // Secondary view column: star sizing
+            }
+            return new GridLength(0); // Collapsed: 0 width
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
