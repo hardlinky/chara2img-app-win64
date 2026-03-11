@@ -64,10 +64,21 @@
                     <GridViewColumn Header="Created" Width="120" DisplayMemberBinding="{Binding CreatedAt, StringFormat='{}{0:yyyy-MM-dd HH:mm:ss}'}"/>
                     <GridViewColumn Header="Completed" Width="120" DisplayMemberBinding="{Binding CompletedAt, StringFormat='{}{0:yyyy-MM-dd HH:mm:ss}'}"/>
                     <GridViewColumn Header="Duration" Width="70" DisplayMemberBinding="{Binding Duration}"/>
-                    <GridViewColumn Header="Actions" Width="270">
+                    <GridViewColumn Header="Actions" Width="350">
                         <GridViewColumn.CellTemplate>
                             <DataTemplate>
                                 <StackPanel Orientation="Horizontal">
+                                    <Button Command="{Binding DataContext.CancelJobCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                            CommandParameter="{Binding}"
+                                            Padding="6,3"
+                                            Margin="0,0,3,0"
+                                            FontSize="11"
+                                            ToolTip="Cancel this running job">
+                                        <TextBlock>
+                                            <Run Text="❌" Foreground="#F44336"/>
+                                            <Run Text=" Cancel"/>
+                                        </TextBlock>
+                                    </Button>
                                     <Button Content="📋 Load Inputs" 
                                             Command="{Binding DataContext.LoadJobInputsCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                             CommandParameter="{Binding}"

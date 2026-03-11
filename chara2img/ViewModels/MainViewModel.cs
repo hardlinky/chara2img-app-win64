@@ -262,6 +262,7 @@ namespace chara2img.ViewModels
         public ICommand RemoveJobCommand { get; }
         public ICommand RerunJobCommand { get; }
         public ICommand LoadJobInputsCommand { get; }
+        public ICommand CancelJobCommand { get; }
 
         // Add new command for navigating jobs
         public ICommand NavigateToPreviousJobCommand { get; }
@@ -326,9 +327,10 @@ namespace chara2img.ViewModels
             ShowImageCommand = new RelayCommand<BitmapImage>(ShowImage);
             CloseImageCommand = new RelayCommand(() => { IsGalleryView = true; CurrentImage = null; });
             SaveImageAsCommand = new RelayCommand(SaveImageAs, () => CurrentImage != null && !IsGalleryView);
-            RemoveJobCommand = new RelayCommand<RunpodJob>(RemoveJob, job => job != null);
+            RemoveJobCommand = new RelayCommand<RunpodJob>(RemoveJob, job => job != null && (job.Status == "completed" || job.Status == "failed" || job.Status == "cancelled" || job.Status == "timeout"));
             RerunJobCommand = new RelayCommand<RunpodJob>(async job => await RerunJobAsync(job), job => job != null && !string.IsNullOrEmpty(job?.WorkflowInputsJson) && !IsRunning);
             LoadJobInputsCommand = new RelayCommand<RunpodJob>(LoadJobInputs, job => job != null && !string.IsNullOrEmpty(job?.WorkflowInputsJson));
+            CancelJobCommand = new RelayCommand<RunpodJob>(async job => await CancelJobAsync(job), job => job != null && (job.Status == "pending" || job.Status == "in_queue" || job.Status == "in_progress"));
             NavigateToPreviousJobCommand = new RelayCommand(NavigateToPreviousJob, CanNavigateToPreviousJob);
             NavigateToNextJobCommand = new RelayCommand(NavigateToNextJob, CanNavigateToNextJob);
 
@@ -593,6 +595,55 @@ namespace chara2img.ViewModels
             catch (Exception ex)
             {
                 MessageBox.Show($"Failed to rerun job:\n{ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private async Task CancelJobAsync(RunpodJob? job)
+        {
+            if (job == null || string.IsNullOrEmpty(job.Id))
+            {
+                MessageBox.Show("Cannot cancel this job: job ID not available.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+
+            var result = MessageBox.Show(
+                $"Are you sure you want to cancel job {job.Id}?",
+                "Confirm Cancellation",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Question);
+
+            if (result == MessageBoxResult.Yes)
+            {
+                try
+                {
+                    StatusMessage = $"Cancelling job {job.Id}...";
+                    var service = GetOrCreateService();
+                    var success = await service.CancelJobAsync(job.Id);
+
+                    if (success)
+                    {
+                        job.Status = "cancelled";
+                        job.CompletedAt = DateTime.Now;
+                        StatusMessage = $"Job {job.Id} cancelled successfully";
+
+                        // Refresh the job status to get the latest state
+                        await RefreshJobStatusAsync();
+
+                        // Save jobs after cancellation
+                        SaveJobsToSettings();
+                    }
+                    else
+                    {
+                        StatusMessage = $"Failed to cancel job {job.Id}";
+                        MessageBox.Show($"Failed to cancel job {job.Id}. The job may have already completed or been cancelled.",
+                            "Cancellation Failed", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    StatusMessage = $"Error cancelling job: {ex.Message}";
+                    MessageBox.Show($"Error cancelling job:\n{ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
             }
         }
 

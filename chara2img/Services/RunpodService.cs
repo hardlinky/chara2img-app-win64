@@ -154,5 +154,20 @@ namespace chara2img.Services
             
             return result;
         }
+
+        public async Task<bool> CancelJobAsync(string jobId)
+        {
+            try
+            {
+                var url = $"https://api.runpod.ai/v2/{_endpointId}/cancel/{jobId}";
+                var response = await _httpClient.PostAsync(url, null);
+                response.EnsureSuccessStatusCode();
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
     }
 }

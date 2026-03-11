@@ -64,6 +64,12 @@
                         <Trigger Property="IsPressed" Value="True">
                             <Setter Property="Background" Value="{StaticResource SelectedBrush}"/>
                         </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Background" Value="#1A1A1A"/>
+                            <Setter Property="Foreground" Value="#666666"/>
+                            <Setter Property="BorderBrush" Value="#2A2A2A"/>
+                            <Setter Property="Opacity" Value="0.5"/>
+                        </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
             </Setter.Value>
