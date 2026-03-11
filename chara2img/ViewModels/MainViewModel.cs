@@ -259,10 +259,9 @@ namespace chara2img.ViewModels
         public ICommand ShowImageCommand { get; }
         public ICommand CloseImageCommand { get; }
         public ICommand SaveImageAsCommand { get; }
-        public ICommand RemoveJobCommand { get; }
+        public ICommand CancelOrRemoveJobCommand { get; }
         public ICommand RerunJobCommand { get; }
         public ICommand LoadJobInputsCommand { get; }
-        public ICommand CancelJobCommand { get; }
 
         // Add new command for navigating jobs
         public ICommand NavigateToPreviousJobCommand { get; }
@@ -327,10 +326,9 @@ namespace chara2img.ViewModels
             ShowImageCommand = new RelayCommand<BitmapImage>(ShowImage);
             CloseImageCommand = new RelayCommand(() => { IsGalleryView = true; CurrentImage = null; });
             SaveImageAsCommand = new RelayCommand(SaveImageAs, () => CurrentImage != null && !IsGalleryView);
-            RemoveJobCommand = new RelayCommand<RunpodJob>(RemoveJob, job => job != null && (job.Status == "completed" || job.Status == "failed" || job.Status == "cancelled" || job.Status == "timeout"));
+            CancelOrRemoveJobCommand = new RelayCommand<RunpodJob>(async job => await CancelOrRemoveJobAsync(job), job => job != null);
             RerunJobCommand = new RelayCommand<RunpodJob>(async job => await RerunJobAsync(job), job => job != null && !string.IsNullOrEmpty(job?.WorkflowInputsJson) && !IsRunning);
             LoadJobInputsCommand = new RelayCommand<RunpodJob>(LoadJobInputs, job => job != null && !string.IsNullOrEmpty(job?.WorkflowInputsJson));
-            CancelJobCommand = new RelayCommand<RunpodJob>(async job => await CancelJobAsync(job), job => job != null && (job.Status == "pending" || job.Status == "in_queue" || job.Status == "in_progress"));
             NavigateToPreviousJobCommand = new RelayCommand(NavigateToPreviousJob, CanNavigateToPreviousJob);
             NavigateToNextJobCommand = new RelayCommand(NavigateToNextJob, CanNavigateToNextJob);
 
@@ -644,6 +642,25 @@ namespace chara2img.ViewModels
                     StatusMessage = $"Error cancelling job: {ex.Message}";
                     MessageBox.Show($"Error cancelling job:\n{ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 }
+            }
+        }
+
+        private async Task CancelOrRemoveJobAsync(RunpodJob? job)
+        {
+            if (job == null) return;
+
+            // Determine if this is a running job or finished job
+            bool isRunning = job.Status == "pending" || job.Status == "in_queue" || job.Status == "in_progress";
+
+            if (isRunning)
+            {
+                // Cancel the running job
+                await CancelJobAsync(job);
+            }
+            else
+            {
+                // Remove the finished job
+                RemoveJob(job);
             }
         }
 

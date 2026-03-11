@@ -11,6 +11,7 @@ namespace chara2img.Models
         private string _status = "pending";
         private DateTime? _completedAt;
         private string? _workerId;
+        private List<string>? _imageFilePaths;
 
         public event PropertyChangedEventHandler? PropertyChanged;
 
@@ -51,7 +52,20 @@ namespace chara2img.Models
         
         // Only serialize file paths - these are small
         public string? ImageFilePath { get; set; }
-        public List<string>? ImageFilePaths { get; set; }
+        
+        public List<string>? ImageFilePaths
+        {
+            get => _imageFilePaths;
+            set
+            {
+                if (_imageFilePaths != value)
+                {
+                    _imageFilePaths = value;
+                    OnPropertyChanged();
+                    OnPropertyChanged(nameof(ImageCount));
+                }
+            }
+        }
         
         public DateTime CreatedAt { get; set; }
         
@@ -77,6 +91,17 @@ namespace chara2img.Models
         
         // Store the workflow inputs used for this job to enable rerun
         public string? WorkflowInputsJson { get; set; }
+
+        [JsonIgnore]
+        public int ImageCount
+        {
+            get
+            {
+                if (ImageFilePaths != null)
+                    return ImageFilePaths.Count;
+                return 0;
+            }
+        }
 
         [JsonIgnore]
         public string Duration

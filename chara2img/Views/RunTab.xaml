@@ -10,6 +10,7 @@
         <local:InverseBoolToVisibilityConverter x:Key="InverseBoolToVisibilityConverter"/>
         <local:ExpandCollapseTextConverter x:Key="ExpandCollapseTextConverter"/>
         <local:ZeroToVisibilityConverter x:Key="ZeroToVisibilityConverter"/>
+        <local:JobActionButtonTooltipConverter x:Key="JobActionButtonTooltipConverter"/>
     </UserControl.Resources>
 
     <Grid Margin="20" Background="{DynamicResource WindowBackgroundBrush}">
@@ -61,23 +62,65 @@
                     <GridViewColumn Header="Job ID" Width="130" DisplayMemberBinding="{Binding Id}"/>
                     <GridViewColumn Header="Worker ID" Width="120" DisplayMemberBinding="{Binding WorkerId}"/>
                     <GridViewColumn Header="Status" Width="70" DisplayMemberBinding="{Binding Status}"/>
+                    <GridViewColumn Header="Images" Width="60" DisplayMemberBinding="{Binding ImageCount}"/>
                     <GridViewColumn Header="Created" Width="120" DisplayMemberBinding="{Binding CreatedAt, StringFormat='{}{0:yyyy-MM-dd HH:mm:ss}'}"/>
                     <GridViewColumn Header="Completed" Width="120" DisplayMemberBinding="{Binding CompletedAt, StringFormat='{}{0:yyyy-MM-dd HH:mm:ss}'}"/>
                     <GridViewColumn Header="Duration" Width="70" DisplayMemberBinding="{Binding Duration}"/>
-                    <GridViewColumn Header="Actions" Width="350">
+                    <GridViewColumn Header="Actions" Width="280">
                         <GridViewColumn.CellTemplate>
                             <DataTemplate>
                                 <StackPanel Orientation="Horizontal">
-                                    <Button Command="{Binding DataContext.CancelJobCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                    <Button Command="{Binding DataContext.CancelOrRemoveJobCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                             CommandParameter="{Binding}"
+                                            ToolTip="{Binding Status, Converter={StaticResource JobActionButtonTooltipConverter}}"
                                             Padding="6,3"
                                             Margin="0,0,3,0"
-                                            FontSize="11"
-                                            ToolTip="Cancel this running job">
-                                        <TextBlock>
-                                            <Run Text="❌" Foreground="#F44336"/>
-                                            <Run Text=" Cancel"/>
-                                        </TextBlock>
+                                            FontSize="11">
+                                        <Button.Style>
+                                            <Style TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding Status}" Value="pending">
+                                                        <Setter Property="Content">
+                                                            <Setter.Value>
+                                                                <TextBlock>
+                                                                    <Run Text="❌" Foreground="#F44336"/>
+                                                                    <Run Text=" Cancel"/>
+                                                                </TextBlock>
+                                                            </Setter.Value>
+                                                        </Setter>
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding Status}" Value="in_queue">
+                                                        <Setter Property="Content">
+                                                            <Setter.Value>
+                                                                <TextBlock>
+                                                                    <Run Text="❌" Foreground="#F44336"/>
+                                                                    <Run Text=" Cancel"/>
+                                                                </TextBlock>
+                                                            </Setter.Value>
+                                                        </Setter>
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding Status}" Value="in_progress">
+                                                        <Setter Property="Content">
+                                                            <Setter.Value>
+                                                                <TextBlock>
+                                                                    <Run Text="❌" Foreground="#F44336"/>
+                                                                    <Run Text=" Cancel"/>
+                                                                </TextBlock>
+                                                            </Setter.Value>
+                                                        </Setter>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                                <!-- Default content for completed/failed/cancelled/timeout -->
+                                                <Setter Property="Content">
+                                                    <Setter.Value>
+                                                        <TextBlock>
+                                                            <Run Text="🗑️" Foreground="#F44336"/>
+                                                            <Run Text=" Remove"/>
+                                                        </TextBlock>
+                                                    </Setter.Value>
+                                                </Setter>
+                                            </Style>
+                                        </Button.Style>
                                     </Button>
                                     <Button Content="📋 Load Inputs" 
                                             Command="{Binding DataContext.LoadJobInputsCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
@@ -90,15 +133,8 @@
                                             Command="{Binding DataContext.RerunJobCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                             CommandParameter="{Binding}"
                                             Padding="6,3"
-                                            Margin="0,0,3,0"
                                             FontSize="11"
                                             ToolTip="Rerun this job with the same input values"/>
-                                    <Button Content="🗑️ Remove" 
-                                            Command="{Binding DataContext.RemoveJobCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                            CommandParameter="{Binding}"
-                                            Padding="6,3"
-                                            FontSize="11"
-                                            ToolTip="Remove this job from the list"/>
                                 </StackPanel>
                             </DataTemplate>
                         </GridViewColumn.CellTemplate>

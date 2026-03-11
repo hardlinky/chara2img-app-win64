@@ -20,7 +20,7 @@ namespace chara2img
         public MainWindow()
         {
             InitializeComponent();
-            
+
             this.Loaded += MainWindow_Loaded;
             this.StateChanged += MainWindow_StateChanged;
         }
@@ -199,8 +199,8 @@ namespace chara2img
     {
         public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture)
         {
-            if (values.Length == 3 && 
-                values[0] is BitmapImage currentImage && 
+            if (values.Length == 3 &&
+                values[0] is BitmapImage currentImage &&
                 values[1] is ObservableCollection<BitmapImage> images &&
                 values[2] is RunpodJob selectedJob)
             {
@@ -209,12 +209,12 @@ namespace chara2img
                 {
                     // Get the current image full path
                     string filePath = "-";
-                    if (selectedJob?.ImageFilePaths != null && 
+                    if (selectedJob?.ImageFilePaths != null &&
                         index < selectedJob.ImageFilePaths.Count)
                     {
                         filePath = selectedJob.ImageFilePaths[index];
                     }
-                    
+
                     return $"{filePath} {index + 1}/{images.Count}";
                 }
                 return "-";
@@ -223,6 +223,32 @@ namespace chara2img
         }
 
         public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+    public class JobActionButtonTooltipConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            if (value is string status)
+            {
+                // Running states: pending, in_queue, in_progress
+                if (status == "pending" || status == "in_queue" || status == "in_progress")
+                {
+                    return "Cancel this running job";
+                }
+                // Finished states: completed, failed, cancelled, timeout
+                else
+                {
+                    return "Remove this job from the list";
+                }
+            }
+            return "Remove this job from the list";
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
         {
             throw new NotImplementedException();
         }
