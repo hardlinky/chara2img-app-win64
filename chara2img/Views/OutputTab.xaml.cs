@@ -18,6 +18,11 @@ namespace chara2img.Views
         private double _vOffset;
         private bool _isDragging;
 
+        private Point _fullscreenScrollMousePoint;
+        private double _fullscreenHOffset;
+        private double _fullscreenVOffset;
+        private bool _isFullscreenDragging;
+
         public OutputTab()
         {
             InitializeComponent();
@@ -68,11 +73,48 @@ namespace chara2img.Views
                     }), System.Windows.Threading.DispatcherPriority.Loaded);
                 }
             }
+            else if (e.PropertyName == nameof(ViewModels.MainViewModel.IsFullscreen))
+            {
+                if (DataContext is ViewModels.MainViewModel viewModel && viewModel.IsFullscreen)
+                {
+                    // Fit image when entering fullscreen
+                    Dispatcher.BeginInvoke(new Action(() =>
+                    {
+                        FitFullscreenImageToScreen();
+                    }), System.Windows.Threading.DispatcherPriority.Loaded);
+                }
+            }
         }
 
         private void OutputTab_PreviewKeyDown(object sender, KeyEventArgs e)
         {
             if (DataContext is not ViewModels.MainViewModel viewModel) return;
+
+            // Handle F11 for fullscreen toggle
+            if (e.Key == Key.F11)
+            {
+                viewModel.ToggleFullscreenCommand.Execute(null);
+                e.Handled = true;
+                return;
+            }
+
+            // Handle Escape - exit fullscreen first, then close image
+            if (e.Key == Key.Escape)
+            {
+                if (viewModel.IsFullscreen)
+                {
+                    viewModel.ToggleFullscreenCommand.Execute(null);
+                    e.Handled = true;
+                    return;
+                }
+                else if (!viewModel.IsGalleryView)
+                {
+                    viewModel.CloseImageCommand.Execute(null);
+                    e.Handled = true;
+                    return;
+                }
+            }
+
             if (viewModel.IsGalleryView || viewModel.CurrentImage == null) return;
 
             var currentImages = viewModel.CurrentImages;
@@ -106,12 +148,6 @@ namespace chara2img.Views
                 case Key.Up:
                     // Go to previous job
                     viewModel.NavigateToPreviousJobCommand.Execute(null);
-                    e.Handled = true;
-                    break;
-
-                case Key.Escape:
-                    // Close image view
-                    viewModel.CloseImageCommand.Execute(null);
                     e.Handled = true;
                     break;
             }
@@ -149,6 +185,39 @@ namespace chara2img.Views
             ImageScrollViewer.ScrollToVerticalOffset(0);
         }
 
+        private void FitFullscreenImageToScreen()
+        {
+            if (FullscreenImage.Source == null) return;
+
+            var imageWidth = FullscreenImage.Source.Width;
+            var imageHeight = FullscreenImage.Source.Height;
+            
+            // Use the actual fullscreen scroll viewer dimensions
+            var scrollViewerWidth = FullscreenScrollViewer.ActualWidth;
+            var scrollViewerHeight = FullscreenScrollViewer.ActualHeight;
+
+            if (imageWidth <= 0 || imageHeight <= 0 || scrollViewerWidth <= 0 || scrollViewerHeight <= 0)
+            {
+                return;
+            }
+
+            // Calculate scale to fit while maintaining aspect ratio
+            var scaleX = scrollViewerWidth / imageWidth;
+            var scaleY = scrollViewerHeight / imageHeight;
+            var scale = Math.Min(scaleX, scaleY);
+
+            // Don't zoom in beyond 100%
+            scale = Math.Min(scale, 1.0);
+
+            // Apply the calculated scale
+            FullscreenScaleTransform.ScaleX = scale;
+            FullscreenScaleTransform.ScaleY = scale;
+
+            // Reset scroll position to center
+            FullscreenScrollViewer.ScrollToHorizontalOffset(0);
+            FullscreenScrollViewer.ScrollToVerticalOffset(0);
+        }
+
         private void ImageScrollViewer_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
         {
             if (Keyboard.Modifiers == ModifierKeys.Control || OutputImage.Source != null)
@@ -161,6 +230,23 @@ namespace chara2img.Views
 
                 ImageScaleTransform.ScaleX = newScale;
                 ImageScaleTransform.ScaleY = newScale;
+
+                e.Handled = true;
+            }
+        }
+
+        private void FullscreenScrollViewer_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
+        {
+            if (FullscreenImage.Source != null)
+            {
+                double zoom = e.Delta > 0 ? 0.1 : -0.1;
+                double newScale = FullscreenScaleTransform.ScaleX + zoom;
+
+                // Limit zoom between 0.1x and 10x
+                newScale = Math.Max(0.1, Math.Min(10, newScale));
+
+                FullscreenScaleTransform.ScaleX = newScale;
+                FullscreenScaleTransform.ScaleY = newScale;
 
                 e.Handled = true;
             }
@@ -199,25 +285,63 @@ namespace chara2img.Views
             }
         }
 
-        private void ImageScrollViewer_SizeChanged(object sender, SizeChangedEventArgs e)
+        private void FullscreenImage_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
-            // Re-fit when the window is resized
-            if (DataContext is ViewModels.MainViewModel viewModel && 
-                !viewModel.IsGalleryView && 
-                viewModel.CurrentImage != null)
+            if (FullscreenImage.Source != null)
             {
-                FitImageToScreen();
+                _fullscreenScrollMousePoint = e.GetPosition(FullscreenScrollViewer);
+                _fullscreenHOffset = FullscreenScrollViewer.HorizontalOffset;
+                _fullscreenVOffset = FullscreenScrollViewer.VerticalOffset;
+                _isFullscreenDragging = true;
+                FullscreenImage.Tag = Cursors.Hand;
+                FullscreenImage.CaptureMouse();
+            }
+        }
+
+        private void FullscreenImage_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+        {
+            _isFullscreenDragging = false;
+            FullscreenImage.Tag = null;
+            FullscreenImage.ReleaseMouseCapture();
+        }
+
+        private void FullscreenImage_MouseMove(object sender, MouseEventArgs e)
+        {
+            if (_isFullscreenDragging && e.LeftButton == MouseButtonState.Pressed)
+            {
+                Point currentPoint = e.GetPosition(FullscreenScrollViewer);
+                double deltaX = currentPoint.X - _fullscreenScrollMousePoint.X;
+                double deltaY = currentPoint.Y - _fullscreenScrollMousePoint.Y;
+
+                FullscreenScrollViewer.ScrollToHorizontalOffset(_fullscreenHOffset - deltaX);
+                FullscreenScrollViewer.ScrollToVerticalOffset(_fullscreenVOffset - deltaY);
             }
         }
 
         private void OutputImage_TargetUpdated(object sender, System.Windows.Data.DataTransferEventArgs e)
         {
-            // This is triggered when the Image Source binding is updated
-            if (DataContext is ViewModels.MainViewModel viewModel &&
-                !viewModel.IsGalleryView &&
-                viewModel.CurrentImage != null)
+            // When a new image is loaded, fit it to screen
+            Dispatcher.BeginInvoke(new Action(() =>
             {
-                Dispatcher.BeginInvoke(new Action(() => FitImageToScreen()), System.Windows.Threading.DispatcherPriority.ApplicationIdle);
+                FitImageToScreen();
+            }), System.Windows.Threading.DispatcherPriority.Loaded);
+        }
+
+        private void ImageScrollViewer_SizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            // Re-fit image when scroll viewer size changes (e.g., window resize)
+            if (OutputImage.Source != null && ImageScaleTransform.ScaleX == 1.0)
+            {
+                FitImageToScreen();
+            }
+        }
+
+        private void FullscreenScrollViewer_SizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            // Re-fit image when fullscreen scroll viewer size changes
+            if (FullscreenImage.Source != null)
+            {
+                FitFullscreenImageToScreen();
             }
         }
     }

@@ -314,6 +314,16 @@ namespace chara2img.ViewModels
             }
         }
 
+        private bool _isFullscreen = false;
+
+        public bool IsFullscreen
+        {
+            get => _isFullscreen;
+            set { _isFullscreen = value; OnPropertyChanged(); }
+        }
+
+        public ICommand ToggleFullscreenCommand { get; }
+
         public MainViewModel()
         {
             RunJobCommand = new RelayCommand(async () => await RunJobAsync(), CanRunJob);
@@ -341,6 +351,8 @@ namespace chara2img.ViewModels
             
             CopyToClipboardCommand = new RelayCommand<string>(CopyToClipboard, text => !string.IsNullOrEmpty(text));
             UpdateNamedVariableHintsCommand = new RelayCommand<string>(UpdateNamedVariableHints);
+
+            ToggleFullscreenCommand = new RelayCommand(ToggleFullscreen, () => !IsGalleryView && CurrentImage != null);
 
             // Load settings
             _settings = AppSettings.Load();
@@ -395,6 +407,11 @@ namespace chara2img.ViewModels
             OnPropertyChanged(nameof(SaveWorkflowWithJob));
             OnPropertyChanged(nameof(SelectedTheme));
             OnPropertyChanged(nameof(MaxPollingAttempts));
+        }
+
+        private void ToggleFullscreen()
+        {
+            IsFullscreen = !IsFullscreen;
         }
 
         private void ApplyTheme(string themeName)
