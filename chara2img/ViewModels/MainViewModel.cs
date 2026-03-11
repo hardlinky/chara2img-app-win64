@@ -1029,9 +1029,33 @@ namespace chara2img.ViewModels
 
                     if (completedJob.Status == "completed" && completedJob.AllImagesBase64 != null && completedJob.AllImagesBase64.Count > 0)
                     {
+                        var wasInPreviewMode = !IsGalleryView;
+                        
                         var filePaths = await SaveAndDisplayImagesAsync(completedJob.AllImagesBase64, jobId);
                         completedJob.ImageFilePaths = filePaths;
                         StatusMessage = $"Job {jobId} completed successfully! Generated {filePaths.Count} image(s).";
+                        
+                        // If we were in preview mode, automatically switch to the completed job and show first image
+                        if (wasInPreviewMode && filePaths.Count > 0)
+                        {
+                            Application.Current.Dispatcher.Invoke(() =>
+                            {
+                                // Temporarily disable auto-gallery mode for this job selection
+                                SelectedJob = completedJob;
+                                // LoadJobImages is called by SelectedJob setter and loads images into CurrentImages
+                                // Now explicitly show the first image
+                                System.Threading.Tasks.Task.Delay(50).ContinueWith(_ =>
+                                {
+                                    Application.Current.Dispatcher.Invoke(() =>
+                                    {
+                                        if (CurrentImages.Count > 0)
+                                        {
+                                            ShowImage(CurrentImages[0]);
+                                        }
+                                    });
+                                });
+                            });
+                        }
                         
                         // Show Windows notification
                         ShowNotification();

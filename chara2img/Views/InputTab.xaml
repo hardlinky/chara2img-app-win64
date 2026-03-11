@@ -174,10 +174,19 @@
                             </Grid>
 
                             <!-- Boolean Input (Checkbox) -->
-                            <CheckBox IsChecked="{Binding Value, UpdateSourceTrigger=PropertyChanged}"
+                            <CheckBox Content=""
                                       VerticalAlignment="Center"
-                                      Content=""
-                                      Visibility="{Binding InputType, Converter={StaticResource InputTypeToVisibilityConverter}, ConverterParameter=boolean}"/>
+                                      Visibility="{Binding InputType, Converter={StaticResource InputTypeToVisibilityConverter}, ConverterParameter=boolean}">
+                                <CheckBox.Style>
+                                    <Style TargetType="CheckBox" BasedOn="{StaticResource {x:Type CheckBox}}">
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding InputType}" Value="boolean">
+                                                <Setter Property="IsChecked" Value="{Binding Value, UpdateSourceTrigger=PropertyChanged}"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </CheckBox.Style>
+                            </CheckBox>
 
                             <!-- Lora List -->
                             <StackPanel Visibility="{Binding InputType, Converter={StaticResource InputTypeToVisibilityConverter}, ConverterParameter=lora_list}">

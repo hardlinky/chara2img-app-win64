@@ -75,7 +75,8 @@
                                             ToolTip="{Binding Status, Converter={StaticResource JobActionButtonTooltipConverter}}"
                                             Padding="6,3"
                                             Margin="0,0,3,0"
-                                            FontSize="11">
+                                            FontSize="11"
+                                            MinWidth="70">
                                         <Button.Style>
                                             <Style TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
                                                 <Style.Triggers>
