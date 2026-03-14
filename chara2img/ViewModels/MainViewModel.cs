@@ -38,7 +38,7 @@ namespace chara2img.ViewModels
         private CancellationTokenSource? _saveCategoryCts;
         private readonly object _saveLock = new();
 
-        private int _maxPollingAttempts = 150;
+        private int _maxPollingAttempts = 100;
 
         public event PropertyChangedEventHandler? PropertyChanged;
 

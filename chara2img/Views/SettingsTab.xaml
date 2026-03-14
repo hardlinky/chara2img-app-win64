@@ -93,8 +93,8 @@
                 <TextBlock Grid.Column="2" 
                            VerticalAlignment="Center"
                            Foreground="{DynamicResource SecondaryTextBrush}"
-                           Text="(2 second intervals, default: 150 = ~5 minutes timeout)"
-                           ToolTip="Each attempt polls the server every 2 seconds. 150 attempts = 5 minutes total."/>
+                           Text="(6 second intervals, default: 100 = ~10 minutes timeout)"
+                           ToolTip="Each attempt polls the server every 6 seconds. 100 attempts ≈ 10 minutes total."/>
             </Grid>
         </StackPanel>
 

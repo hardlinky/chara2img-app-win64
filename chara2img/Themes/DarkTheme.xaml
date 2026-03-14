@@ -19,7 +19,16 @@
     <SolidColorBrush x:Key="ScrollBarThumbBrush" Color="#686868"/>
     <SolidColorBrush x:Key="ScrollBarThumbHoverBrush" Color="#9E9E9E"/>
     <SolidColorBrush x:Key="GroupBoxBorderBrush" Color="#2D2D30"/>
-    
+
+    <!-- Override common SystemColors keys so controls using system brushes respect the dark theme -->
+    <SolidColorBrush x:Key="{x:Static SystemColors.WindowBrushKey}" Color="#1E1E1E"/>
+    <SolidColorBrush x:Key="{x:Static SystemColors.ControlBrushKey}" Color="#2D2D30"/>
+    <SolidColorBrush x:Key="{x:Static SystemColors.HighlightBrushKey}" Color="#094771"/>
+    <SolidColorBrush x:Key="{x:Static SystemColors.ControlTextBrushKey}" Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="{x:Static SystemColors.WindowTextBrushKey}" Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="{x:Static SystemColors.GrayTextBrushKey}" Color="#9E9E9E"/>
+    <SolidColorBrush x:Key="{x:Static SystemColors.HighlightTextBrushKey}" Color="#FFFFFF"/>
+
     <!-- TextBox Style -->
     <Style TargetType="TextBox">
         <Setter Property="Background" Value="{StaticResource InputBackgroundBrush}"/>

@@ -51,7 +51,7 @@ namespace chara2img.Services
 
         public async Task<RunpodJob?> PollJobUntilCompleteAsync(
             RunpodJob job,
-            int pollingIntervalMs = 2000, 
+            int pollingIntervalMs = 6000, 
             int maxAttempts = 150,
             IProgress<string>? progress = null,
             Action<string>? onStatusUpdate = null)

@@ -20,7 +20,7 @@ namespace chara2img.Services
         public List<RunpodJob>? RecentJobs { get; set; }
         public bool SaveWorkflowWithJob { get; set; } = true;
         public string Theme { get; set; } = "Light";
-        public int MaxPollingAttempts { get; set; } = 150;
+        public int MaxPollingAttempts { get; set; } = 100;
         public Dictionary<string, CategoryPreference>? CategoryPreferences { get; set; }
         public string? LastInputValuesJson { get; set; }
 
