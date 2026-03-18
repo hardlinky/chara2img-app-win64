@@ -961,6 +961,32 @@ namespace chara2img.ViewModels
             {
                 StatusMessage = "Submitting job...";
 
+                // Validate image inputs: ensure IMG2IMG image inputs are not empty
+                // Clear previous validation flags for image inputs
+                foreach (var img in WorkflowInputs.Values.SelectMany(v => v).OfType<ImageInput>())
+                {
+                    img.HasValidationError = false;
+                }
+                
+                var emptyImageInputs = WorkflowInputs.Values
+                    .SelectMany(v => v)
+                    .OfType<ImageInput>()
+                    .Where(ii => string.IsNullOrWhiteSpace(ii.Base64Data))
+                    .ToList();
+                
+                if (emptyImageInputs.Any())
+                {
+                    // Mark validation errors and inform user
+                    foreach (var ii in emptyImageInputs)
+                    {
+                        ii.HasValidationError = true;
+                    }
+
+                    StatusMessage = "Please load images for all IMG2IMG inputs before running the job.";
+                    MessageBox.Show("One or more IMG2IMG image inputs are empty. Please load an image or remove the input.", "Validation", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
                 // Save the current input values for next time
                 SaveLastInputValues();
 
