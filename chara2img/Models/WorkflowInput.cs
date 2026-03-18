@@ -232,6 +232,8 @@ namespace chara2img.Models
     {
         private string _inputKey = "";
         private string _base64Data = "";
+        private int _imageWidth;
+        private int _imageHeight;
 
         public string InputKey
         {
@@ -244,6 +246,18 @@ namespace chara2img.Models
         {
             get => _base64Data;
             set { _base64Data = value; OnPropertyChanged(); }
+        }
+
+        public int ImageWidth
+        {
+            get => _imageWidth;
+            set { _imageWidth = value; OnPropertyChanged(); }
+        }
+
+        public int ImageHeight
+        {
+            get => _imageHeight;
+            set { _imageHeight = value; OnPropertyChanged(); }
         }
     }
 }

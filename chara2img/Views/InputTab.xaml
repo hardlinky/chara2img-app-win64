@@ -193,13 +193,39 @@
 
                             <!-- Image Input -->
                             <StackPanel Visibility="{Binding InputType, Converter={StaticResource InputTypeToVisibilityConverter}, ConverterParameter=image}" Orientation="Vertical">
-                                <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
-                                    <Button Padding="8" Margin="0,0,8,0" Click="LoadImageButton_Click">Load Image...</Button>
-                                    <Button Padding="8" Click="ClearImageButton_Click">Clear</Button>
-                                </StackPanel>
-                                <Border BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" Padding="4" MaxHeight="200" MaxWidth="400">
-                                    <Image Source="{Binding Base64Data, Converter={StaticResource Base64ToBitmapImageConverter}}" Stretch="Uniform"/>
+                                <Grid Margin="0,0,0,8">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="10"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <Button Grid.Column="0" Padding="8" Margin="0,0,8,0" Click="LoadImageButton_Click" AllowDrop="True" DragOver="LoadImageButton_DragOver" Drop="LoadImageButton_Drop">Load Image...</Button>
+                                    <Button Grid.Column="1" Padding="8" Click="ClearImageButton_Click">Clear</Button>
+
+                                    <!-- width x height display for the image input -->
+                                    <TextBlock Grid.Column="3" VerticalAlignment="Center" HorizontalAlignment="Left" Foreground="{DynamicResource TextBrush}" FontSize="12">
+                                        <TextBlock.Text>
+                                            <MultiBinding StringFormat="{}{0} x {1}">
+                                                <Binding Path="ImageWidth"/>
+                                                <Binding Path="ImageHeight"/>
+                                            </MultiBinding>
+                                        </TextBlock.Text>
+                                    </TextBlock>
+                                </Grid>
+
+                                <Border x:Name="_imagePreviewBorder" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" Padding="4">
+                                    <Grid>
+                                        <Image Source="{Binding Base64Data, Converter={StaticResource Base64ToBitmapImageConverter}}"
+                                               Stretch="Uniform"
+                                               StretchDirection="Both"
+                                               HorizontalAlignment="Stretch"
+                                               VerticalAlignment="Top"
+                                               Width="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType=Border}}"/>
+                                    </Grid>
                                 </Border>
+
                                 <TextBlock FontStyle="Italic" FontSize="11" Foreground="#888" Margin="0,6,0,0" Text="Loaded image will be sent as base64 in the request."/>
                             </StackPanel>
 
@@ -332,7 +358,10 @@
                                     BorderThickness="1" 
                                     CornerRadius="4" 
                                     Margin="0,0,0,10"
-                                    Background="{DynamicResource WindowBackgroundBrush}">
+                                    Background="{DynamicResource WindowBackgroundBrush}"
+                                    AllowDrop="True"
+                                    DragOver="Category_DragOver"
+                                    Drop="Category_Drop">
                                 <StackPanel>
                                     <!-- Category Header -->
                                     <Grid Background="#33000000">
@@ -427,7 +456,10 @@
                                     BorderThickness="1" 
                                     CornerRadius="4" 
                                     Margin="0,0,0,10"
-                                    Background="{DynamicResource WindowBackgroundBrush}">
+                                    Background="{DynamicResource WindowBackgroundBrush}"
+                                    AllowDrop="True"
+                                    DragOver="Category_DragOver"
+                                    Drop="Category_Drop">
                                 <StackPanel>
                                     <!-- Category Header -->
                                     <Grid Background="#33000000">
