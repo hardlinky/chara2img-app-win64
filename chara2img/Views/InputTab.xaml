@@ -4,10 +4,12 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:local="clr-namespace:chara2img"
+             xmlns:converters="clr-namespace:chara2img.Converters"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
     <UserControl.Resources>
         <local:InputTypeToVisibilityConverter x:Key="InputTypeToVisibilityConverter"/>
+        <converters:Base64ToBitmapImageConverter x:Key="Base64ToBitmapImageConverter"/>
         <local:InverseBoolToVisibilityConverter x:Key="InverseBoolToVisibilityConverter"/>
         <local:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
         <local:CollapseIconConverter x:Key="CollapseIconConverter"/>
@@ -188,6 +190,18 @@
                                     </Style>
                                 </CheckBox.Style>
                             </CheckBox>
+
+                            <!-- Image Input -->
+                            <StackPanel Visibility="{Binding InputType, Converter={StaticResource InputTypeToVisibilityConverter}, ConverterParameter=image}" Orientation="Vertical">
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                    <Button Padding="8" Margin="0,0,8,0" Click="LoadImageButton_Click">Load Image...</Button>
+                                    <Button Padding="8" Click="ClearImageButton_Click">Clear</Button>
+                                </StackPanel>
+                                <Border BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" Padding="4" MaxHeight="200" MaxWidth="400">
+                                    <Image Source="{Binding Base64Data, Converter={StaticResource Base64ToBitmapImageConverter}}" Stretch="Uniform"/>
+                                </Border>
+                                <TextBlock FontStyle="Italic" FontSize="11" Foreground="#888" Margin="0,6,0,0" Text="Loaded image will be sent as base64 in the request."/>
+                            </StackPanel>
 
                             <!-- Lora List -->
                             <StackPanel Visibility="{Binding InputType, Converter={StaticResource InputTypeToVisibilityConverter}, ConverterParameter=lora_list}">

@@ -464,6 +464,23 @@ namespace chara2img.Services
                         }
                         break;
                     }
+
+                case "easy loadImageBase64":
+                    {
+                        // This node expects a key named base64_data
+                        var base64 = inputs.TryGetProperty("base64_data", out var b) ? b.GetString() ?? "" : "";
+                        return new ImageInput
+                        {
+                            NodeId = nodeId,
+                            NodeTitle = title,
+                            Category = category,
+                            DisplayName = displayName,
+                            InputType = "image",
+                            InputKey = "base64_data",
+                            Base64Data = base64,
+                            VariableHint = variableHint
+                        };
+                    }
             }
 
             // Default fallback: try to infer from the first input property

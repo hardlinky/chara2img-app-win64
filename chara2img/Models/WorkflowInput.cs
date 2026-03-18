@@ -227,4 +227,23 @@ namespace chara2img.Models
             set { _loras = value; OnPropertyChanged(); }
         }
     }
+
+    public class ImageInput : WorkflowInput
+    {
+        private string _inputKey = "";
+        private string _base64Data = "";
+
+        public string InputKey
+        {
+            get => _inputKey;
+            set { _inputKey = value; OnPropertyChanged(); }
+        }
+
+        // Store the full data URI or plain base64 string
+        public string Base64Data
+        {
+            get => _base64Data;
+            set { _base64Data = value; OnPropertyChanged(); }
+        }
+    }
 }

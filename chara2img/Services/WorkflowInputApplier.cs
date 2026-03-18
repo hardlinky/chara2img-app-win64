@@ -103,6 +103,26 @@ namespace chara2img.Services
                             loraIndex++;
                         }
                     }
+                    else if (input is ImageInput imageInput)
+                    {
+                        // Ensure we send plain base64 (no data URI prefix) and normalize padding
+                        var valueToSend = imageInput.Base64Data ?? "";
+                        // If a data URI is present, remove the prefix
+                        if (valueToSend.Contains(","))
+                        {
+                            valueToSend = valueToSend.Substring(valueToSend.IndexOf(',') + 1);
+                        }
+                        // Remove whitespace/newlines
+                        valueToSend = string.Concat(valueToSend.Where(c => !char.IsWhiteSpace(c)));
+                        // Ensure proper padding for base64
+                        var mod = valueToSend.Length % 4;
+                        if (mod != 0)
+                        {
+                            valueToSend = valueToSend.PadRight(valueToSend.Length + (4 - mod), '=');
+                        }
+
+                        nodeInputsJson[imageInput.InputKey] = valueToSend;
+                    }
 
                     nodeDict["inputs"] = JsonSerializer.Deserialize<object>(nodeInputsJson.ToJsonString());
                     workflow[input.NodeId] = JsonSerializer.SerializeToElement(nodeDict);

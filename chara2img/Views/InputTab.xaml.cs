@@ -3,6 +3,8 @@ using System.Windows;
 using System.Windows.Controls;
 using chara2img.Models;
 using chara2img.ViewModels;
+using Microsoft.Win32;
+using System.IO;
 
 namespace chara2img.Views
 {
@@ -41,6 +43,45 @@ namespace chara2img.Views
             {
                 viewModel.UpdateNamedVariableHintsCommand.Execute(input.Category);
             }
+        }
+
+        private void LoadImageButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is not Button btn) return;
+            if (btn.DataContext is not ImageInput imgInput) return;
+
+            var dlg = new OpenFileDialog
+            {
+                Title = "Select Image",
+                Filter = "Image Files|*.png;*.jpg;*.jpeg;*.bmp;*.gif|All Files|*.*"
+            };
+
+            if (dlg.ShowDialog() == true)
+            {
+                try
+                {
+                    var bytes = File.ReadAllBytes(dlg.FileName);
+                    var prefix = "data:image/png;base64,";
+                    // Try to detect png/jpg
+                    var ext = Path.GetExtension(dlg.FileName).ToLowerInvariant();
+                    if (ext == ".jpg" || ext == ".jpeg") prefix = "data:image/jpeg;base64,";
+                    else if (ext == ".gif") prefix = "data:image/gif;base64,";
+                    else if (ext == ".bmp") prefix = "data:image/bmp;base64,";
+
+                    imgInput.Base64Data = prefix + Convert.ToBase64String(bytes);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Failed to load image:\n{ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+        }
+
+        private void ClearImageButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is not Button btn) return;
+            if (btn.DataContext is not ImageInput imgInput) return;
+            imgInput.Base64Data = "";
         }
     }
 }
